@@ -25,7 +25,7 @@ import type {
 } from "./types";
 
 const BASE_URL = "https://api.kirha.ai/chat/v1";
-const DEFAULT_TIMEOUT = 30000;
+const DEFAULT_TIMEOUT = 120_000;
 
 export interface ApiServiceConfig {
   apiKey: string;
@@ -70,7 +70,7 @@ export class ApiService {
 
     const parsed = ApiErrorResponseSchema.safeParse(errorBody);
     if (parsed.success) {
-      const { error } = parsed.data;
+      const error = parsed.data;
 
       if (response.status === 401) {
         throw new AuthenticationError(error.message);
@@ -177,7 +177,7 @@ export class ApiService {
   ): Promise<SearchResult> {
     const body: ApiSearchRequest = {
       query,
-      vertical,
+      vertical_id: vertical,
     };
 
     if (options?.summarization !== false && options?.summarization) {
@@ -198,7 +198,7 @@ export class ApiService {
   async createPlan(query: string, vertical: string): Promise<PlanResponse> {
     const body: ApiPlanRequest = {
       query,
-      vertical,
+      vertical_id: vertical,
     };
 
     return this.post("/search/plan", PlanResponseSchema, body);

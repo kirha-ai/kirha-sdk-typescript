@@ -2,8 +2,13 @@ import { describe, it, expect, mock, afterEach } from "bun:test";
 import { ApiService } from "../src/api-service";
 import { ApiError, AuthenticationError, RateLimitError } from "../src/errors";
 
+type MockFetch = ReturnType<
+  typeof mock<(url: string, options: RequestInit) => Promise<Response>>
+>;
+
 describe("ApiService", () => {
   const originalFetch = globalThis.fetch;
+  let mockFn: MockFetch;
 
   afterEach(() => {
     globalThis.fetch = originalFetch;
@@ -16,7 +21,7 @@ describe("ApiService", () => {
     json: () => Promise<unknown>;
     headers?: Headers;
   }) {
-    globalThis.fetch = mock(() =>
+    mockFn = mock(() =>
       Promise.resolve({
         ok: response.ok,
         status: response.status,
@@ -25,6 +30,7 @@ describe("ApiService", () => {
         headers: response.headers ?? new Headers(),
       } as Response),
     );
+    globalThis.fetch = mockFn as unknown as typeof fetch;
   }
 
   describe("search", () => {
@@ -44,14 +50,13 @@ describe("ApiService", () => {
       const result = await service.search("bitcoin price", "crypto");
 
       expect(globalThis.fetch).toHaveBeenCalledTimes(1);
-      const [url, options] = (globalThis.fetch as ReturnType<typeof mock>).mock
-        .calls[0] as [string, RequestInit];
+      const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
 
       expect(url).toBe("https://api.kirha.ai/chat/v1/search");
       expect(options.method).toBe("POST");
       expect(JSON.parse(options.body as string)).toEqual({
         query: "bitcoin price",
-        vertical: "crypto",
+        vertical_id: "crypto",
       });
       expect(result.summary).toBe("Bitcoin is at $50,000");
       expect(result.rawData).toEqual({ price: 50000 });
@@ -69,8 +74,7 @@ describe("ApiService", () => {
         summarization: { model: "kirha-flash", instruction: "Be brief" },
       });
 
-      const [, options] = (globalThis.fetch as ReturnType<typeof mock>).mock
-        .calls[0] as [string, RequestInit];
+      const [, options] = mockFn.mock.calls[0] as [string, RequestInit];
       const body = JSON.parse(options.body as string);
 
       expect(body.summarization).toEqual({
@@ -92,8 +96,7 @@ describe("ApiService", () => {
         summarization: "kirha",
       });
 
-      const [, options] = (globalThis.fetch as ReturnType<typeof mock>).mock
-        .calls[0] as [string, RequestInit];
+      const [, options] = mockFn.mock.calls[0] as [string, RequestInit];
       const body = JSON.parse(options.body as string);
 
       expect(body.summarization).toEqual({
@@ -130,14 +133,13 @@ describe("ApiService", () => {
       const service = new ApiService({ apiKey: "test-key" });
       const result = await service.createPlan("query", "crypto");
 
-      const [url] = (globalThis.fetch as ReturnType<typeof mock>).mock
-        .calls[0] as [string, RequestInit];
+      const [url] = mockFn.mock.calls[0] as [string, RequestInit];
 
       expect(url).toBe("https://api.kirha.ai/chat/v1/search/plan");
       expect(result.id).toBe("plan-123");
       expect(result.status).toBe("pending_confirmation");
       expect(result.steps).toHaveLength(1);
-      expect(result.steps[0].toolName).toBe("get_price");
+      expect(result.steps[0]?.toolName).toBe("get_price");
       expect(result.usage.estimated).toBe(10);
       expect(result.account?.balance).toBe(100);
     });
@@ -154,8 +156,7 @@ describe("ApiService", () => {
       const service = new ApiService({ apiKey: "test-key" });
       await service.executePlan("plan-123");
 
-      const [url, options] = (globalThis.fetch as ReturnType<typeof mock>).mock
-        .calls[0] as [string, RequestInit];
+      const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
       const body = JSON.parse(options.body as string);
 
       expect(url).toBe("https://api.kirha.ai/chat/v1/search/plan/run");
@@ -184,8 +185,7 @@ describe("ApiService", () => {
       const service = new ApiService({ apiKey: "test-key" });
       const result = await service.getTools("crypto");
 
-      const [url, options] = (globalThis.fetch as ReturnType<typeof mock>).mock
-        .calls[0] as [string, RequestInit];
+      const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
 
       expect(url).toBe("https://api.kirha.ai/chat/v1/tools?vertical_id=crypto");
       expect(options.method).toBe("GET");
@@ -212,8 +212,7 @@ describe("ApiService", () => {
       const service = new ApiService({ apiKey: "test-key" });
       const result = await service.executeTool("get_price", { symbol: "BTC" });
 
-      const [url, options] = (globalThis.fetch as ReturnType<typeof mock>).mock
-        .calls[0] as [string, RequestInit];
+      const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
       const body = JSON.parse(options.body as string);
 
       expect(url).toBe("https://api.kirha.ai/chat/v1/tools/execute");
@@ -239,7 +238,7 @@ describe("ApiService", () => {
 
       const service = new ApiService({ apiKey: "bad-key" });
 
-      await expect(service.search("query", "crypto")).rejects.toThrow(
+      expect(service.search("query", "crypto")).rejects.toThrow(
         AuthenticationError,
       );
     });
@@ -299,8 +298,7 @@ describe("ApiService", () => {
       const service = new ApiService({ apiKey: "my-secret-key" });
       await service.search("query", "crypto");
 
-      const [, options] = (globalThis.fetch as ReturnType<typeof mock>).mock
-        .calls[0] as [string, RequestInit];
+      const [, options] = mockFn.mock.calls[0] as [string, RequestInit];
       const headers = options.headers as Headers;
 
       expect(headers.get("Authorization")).toBe("Bearer my-secret-key");

@@ -55,37 +55,47 @@ export const UsageSchema = z.object({
 
 export const SearchResultSchema = z
   .object({
+    id: z.string().optional(),
     summary: z.string().optional(),
     raw_data: z.unknown().optional(),
     planning: z
       .object({
-        plan_id: z.string(),
+        status: z.string(),
         steps: z
           .array(
             z.object({
+              id: z.string(),
               tool_name: z.string(),
-              arguments: z.record(z.unknown()),
+              parameters: z.record(z.unknown()),
+              reasoning: z.string().optional(),
             }),
           )
           .optional(),
+        reason: z.string().optional(),
       })
       .optional(),
     usage: UsageSchema.optional(),
+    deterministicSignature: z.string().optional(),
     account: AccountSchema.optional(),
   })
   .transform((data) => ({
+    id: data.id,
     summary: data.summary,
     rawData: data.raw_data,
     planning: data.planning
       ? {
-          planId: data.planning.plan_id,
+          status: data.planning.status,
           steps: data.planning.steps?.map((s) => ({
+            id: s.id,
             toolName: s.tool_name,
-            arguments: s.arguments,
+            parameters: s.parameters,
+            reasoning: s.reasoning,
           })),
+          reason: data.planning.reason,
         }
       : undefined,
     usage: data.usage,
+    deterministicSignature: data.deterministicSignature,
     account: data.account,
   }));
 
@@ -137,10 +147,29 @@ export const ToolExecutionResultSchema = z
     usage: data.usage,
   }));
 
-export const ApiErrorResponseSchema = z.object({
+const NestedErrorSchema = z.object({
+  success: z.literal(false).optional(),
   error: z.object({
     code: z.string(),
     message: z.string(),
     details: z.unknown().optional(),
   }),
 });
+
+const FlatErrorSchema = z.object({
+  type: z.string(),
+  reason: z.string(),
+});
+
+export const ApiErrorResponseSchema = z.union([
+  NestedErrorSchema.transform((data) => ({
+    code: data.error.code,
+    message: data.error.message,
+    details: data.error.details,
+  })),
+  FlatErrorSchema.transform((data) => ({
+    code: data.type,
+    message: data.reason,
+    details: undefined,
+  })),
+]);

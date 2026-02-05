@@ -118,10 +118,11 @@ export class LocalService {
     return {
       rawData: results,
       planning: {
-        planId: "local",
-        steps: plan.steps.map((step) => ({
+        status: "success",
+        steps: plan.steps.map((step, index) => ({
+          id: `local-${index}`,
           toolName: step.toolName,
-          arguments: step.arguments as Record<string, unknown>,
+          parameters: step.arguments as Record<string, unknown>,
         })),
       },
     };

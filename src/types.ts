@@ -67,20 +67,25 @@ export interface LocalSearchOptions {
 }
 
 export interface PlanStep {
+  id: string;
   toolName: string;
-  arguments: Record<string, unknown>;
+  parameters: Record<string, unknown>;
+  reasoning?: string;
 }
 
 export interface PlanningInfo {
-  planId: string;
+  status: string;
   steps?: PlanStep[];
+  reason?: string;
 }
 
 export interface SearchResult {
+  id?: string;
   summary?: string;
   rawData?: unknown;
   planning?: PlanningInfo;
   usage?: PlanUsage;
+  deterministicSignature?: string;
   account?: PlanAccount;
 }
 
@@ -127,7 +132,7 @@ export interface ToolsOptions {
 
 export interface ApiSearchRequest {
   query: string;
-  vertical: string;
+  vertical_id: string;
   summarization?: {
     enable: boolean;
     model: string;
@@ -139,7 +144,7 @@ export interface ApiSearchRequest {
 
 export interface ApiPlanRequest {
   query: string;
-  vertical: string;
+  vertical_id: string;
 }
 
 export interface ApiPlanRunRequest {
