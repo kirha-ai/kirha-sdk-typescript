@@ -19,4 +19,4 @@ console.log("Steps:", plan.steps);
 console.log("Estimated usage:", plan.usage.estimated);
 
 const result = await plan.execute();
-console.log(result.rawData);
+console.log(result.data);

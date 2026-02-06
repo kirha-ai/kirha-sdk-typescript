@@ -43,7 +43,7 @@ Execute a search query with optional summarization.
 const result = await kirha.search("Bitcoin price", {
   vertical: "crypto",
   summarization: { model: "kirha-flash", instruction: "Be concise" },
-  includeRawData: true,
+  includeData: true,
   includePlanning: true,
 });
 
@@ -63,7 +63,7 @@ console.log(result.usage?.consumed);
 |--------|------|---------|-------------|
 | `vertical` | `string` | Constructor default | Data vertical |
 | `summarization` | `SummarizationConfig \| false` | Constructor default | Summarization config or `false` to disable |
-| `includeRawData` | `boolean` | `true` | Include raw provider data |
+| `includeData` | `boolean` | `true` | Include provider data |
 | `includePlanning` | `boolean` | `false` | Include execution plan details |
 
 #### Returns: `SearchResult`
@@ -71,7 +71,7 @@ console.log(result.usage?.consumed);
 | Field | Type | Description |
 |-------|------|-------------|
 | `summary` | `string?` | AI-generated summary |
-| `rawData` | `unknown?` | Raw data from providers |
+| `data` | `unknown?` | Data from providers |
 | `planning` | `PlanningInfo?` | Execution plan details |
 | `usage` | `{ estimated, consumed }?` | API usage for this request |
 | `account` | `{ balance, balanceTimestamp }?` | Account balance info |
@@ -138,7 +138,7 @@ Execute a previously created plan.
 ```typescript
 const result = await plan.execute({
   summarization: "kirha",
-  includeRawData: true,
+  includeData: true,
   includePlanning: true,
 });
 ```
@@ -148,7 +148,7 @@ const result = await plan.execute({
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `summarization` | `SummarizationConfig \| false` | Plan default | Override summarization |
-| `includeRawData` | `boolean` | `true` | Include raw provider data |
+| `includeData` | `boolean` | `true` | Include provider data |
 | `includePlanning` | `boolean` | `false` | Include execution plan details |
 
 #### Returns: `SearchResult`

@@ -168,24 +168,24 @@ export class ApiService {
 
   async search(
     query: string,
-    vertical: string,
+    vertical?: string,
     options?: {
       summarization?: SummarizationConfig | false;
-      includeRawData?: boolean;
+      includeData?: boolean;
       includePlanning?: boolean;
     },
   ): Promise<SearchResult> {
     const body: ApiSearchRequest = {
       query,
-      vertical_id: vertical,
+      ...(vertical && { vertical_id: vertical }),
     };
 
     if (options?.summarization !== false && options?.summarization) {
       body.summarization = normalizeSummarization(options.summarization);
     }
 
-    if (options?.includeRawData !== undefined) {
-      body.include_raw_data = options.includeRawData;
+    if (options?.includeData !== undefined) {
+      body.include_raw_data = options.includeData;
     }
 
     if (options?.includePlanning !== undefined) {
@@ -195,10 +195,10 @@ export class ApiService {
     return this.post("/search", SearchResultSchema, body);
   }
 
-  async createPlan(query: string, vertical: string): Promise<PlanResponse> {
+  async createPlan(query: string, vertical?: string): Promise<PlanResponse> {
     const body: ApiPlanRequest = {
       query,
-      vertical_id: vertical,
+      ...(vertical && { vertical_id: vertical }),
     };
 
     return this.post("/search/plan", PlanResponseSchema, body);
@@ -208,7 +208,7 @@ export class ApiService {
     planId: string,
     options?: {
       summarization?: SummarizationConfig | false;
-      includeRawData?: boolean;
+      includeData?: boolean;
       includePlanning?: boolean;
     },
   ): Promise<SearchResult> {
@@ -220,8 +220,8 @@ export class ApiService {
       body.summarization = normalizeSummarization(options.summarization);
     }
 
-    if (options?.includeRawData !== undefined) {
-      body.include_raw_data = options.includeRawData;
+    if (options?.includeData !== undefined) {
+      body.include_raw_data = options.includeData;
     }
 
     if (options?.includePlanning !== undefined) {

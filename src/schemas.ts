@@ -81,7 +81,7 @@ export const SearchResultSchema = z
   .transform((data) => ({
     id: data.id,
     summary: data.summary,
-    rawData: data.raw_data,
+    data: data.raw_data,
     planning: data.planning
       ? {
           status: data.planning.status,

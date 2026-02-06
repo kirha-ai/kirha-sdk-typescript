@@ -14,4 +14,4 @@ const result = await kirha.search("What is the profit and loss of the largest US
   vertical: "crypto",
 });
 
-console.log(result.rawData);
+console.log(result.data);

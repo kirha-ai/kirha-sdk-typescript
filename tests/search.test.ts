@@ -27,14 +27,14 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
       expect(result.summary).toBeUndefined();
     });
 
-    it("should return raw data when requested", async () => {
+    it("should return data when requested", async () => {
       const result = await kirha.search("Bitcoin price", {
         vertical: "crypto",
-        includeRawData: true,
+        includeData: true,
       });
 
       expect(result).toBeDefined();
-      expect(result.rawData).toBeDefined();
+      expect(result.data).toBeDefined();
     });
 
     it("should return planning info when requested", async () => {
@@ -71,15 +71,21 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
       expect(result.summary).toBeDefined();
     });
 
+    it("should search without vertical", async () => {
+      const result = await kirha.search("What is the current Bitcoin price?");
+
+      expect(result).toBeDefined();
+    });
+
     it("should skip summarization when disabled", async () => {
       const result = await kirha.search("Bitcoin price", {
         vertical: "crypto",
         summarization: false,
-        includeRawData: true,
+        includeData: true,
       });
 
       expect(result).toBeDefined();
-      expect(result.rawData).toBeDefined();
+      expect(result.data).toBeDefined();
     });
   });
 
@@ -108,18 +114,26 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
       expect(result).toBeDefined();
     });
 
+    it("should create a plan without vertical", async () => {
+      const plan = await kirha.plan("What is the current Bitcoin price?");
+
+      expect(plan).toBeDefined();
+      expect(plan.id).toBeDefined();
+      expect(plan.steps).toBeDefined();
+    });
+
     it("should execute a plan with options", async () => {
       const plan = await kirha.plan("Ethereum market data", {
         vertical: "crypto",
       });
 
       const result = await plan.execute({
-        includeRawData: true,
+        includeData: true,
         includePlanning: true,
       });
 
       expect(result).toBeDefined();
-      expect(result.rawData).toBeDefined();
+      expect(result.data).toBeDefined();
       expect(result.planning).toBeDefined();
     });
   });
