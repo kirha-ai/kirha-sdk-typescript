@@ -15,7 +15,7 @@ export class Plan {
 
   public readonly id: string;
   public readonly query: string;
-  public readonly vertical: string;
+  public readonly vertical?: string;
   public readonly status: string;
   public readonly steps: PlanStepResponse[];
   public readonly reason?: string;
@@ -26,7 +26,7 @@ export class Plan {
     apiService: ApiService,
     response: PlanResponse,
     query: string,
-    vertical: string,
+    vertical?: string,
     defaultSummarization?: SummarizationConfig,
   ) {
     this.apiService = apiService;
@@ -47,7 +47,7 @@ export class Plan {
 
     return this.apiService.executePlan(this.id, {
       summarization,
-      includeRawData: options?.includeRawData,
+      includeData: options?.includeData,
       includePlanning: options?.includePlanning,
     });
   }

@@ -57,7 +57,7 @@ export interface ToolExecutionResult {
 export interface SearchOptions {
   vertical?: string;
   summarization?: SummarizationConfig | false;
-  includeRawData?: boolean;
+  includeData?: boolean;
   includePlanning?: boolean;
 }
 
@@ -82,7 +82,7 @@ export interface PlanningInfo {
 export interface SearchResult {
   id?: string;
   summary?: string;
-  rawData?: unknown;
+  data?: unknown;
   planning?: PlanningInfo;
   usage?: PlanUsage;
   deterministicSignature?: string;
@@ -96,7 +96,7 @@ export interface PlanOptions {
 
 export interface PlanExecuteOptions {
   summarization?: SummarizationConfig | false;
-  includeRawData?: boolean;
+  includeData?: boolean;
   includePlanning?: boolean;
 }
 
@@ -132,7 +132,7 @@ export interface ToolsOptions {
 
 export interface ApiSearchRequest {
   query: string;
-  vertical_id: string;
+  vertical_id?: string;
   summarization?: {
     enable: boolean;
     model: string;
@@ -144,7 +144,7 @@ export interface ApiSearchRequest {
 
 export interface ApiPlanRequest {
   query: string;
-  vertical_id: string;
+  vertical_id?: string;
 }
 
 export interface ApiPlanRunRequest {

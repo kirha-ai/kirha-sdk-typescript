@@ -45,4 +45,4 @@ const result = await kirha.search(
   "Get the portfolio of 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 and save it to the database"
 );
 
-console.log(result.rawData);
+console.log(result.data);

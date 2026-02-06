@@ -1,7 +1,7 @@
 import { ApiService } from "./api-service";
 import { LocalService } from "./local-service";
 import { Plan } from "./plan";
-import { ConfigurationError, ValidationError } from "./errors";
+import { ConfigurationError } from "./errors";
 import type {
   KirhaApiConfig,
   KirhaLocalConfig,
@@ -34,27 +34,17 @@ export class KirhaApi {
 
   async search(query: string, options?: SearchOptions): Promise<SearchResult> {
     const vertical = options?.vertical ?? this.defaultVertical;
-
-    if (!vertical) {
-      throw new ValidationError("vertical is required", "vertical");
-    }
-
     const summarization = options?.summarization ?? this.defaultSummarization;
 
     return this.apiService.search(query, vertical, {
       summarization,
-      includeRawData: options?.includeRawData,
+      includeData: options?.includeData,
       includePlanning: options?.includePlanning,
     });
   }
 
   async plan(query: string, options?: PlanOptions): Promise<Plan> {
     const vertical = options?.vertical ?? this.defaultVertical;
-
-    if (!vertical) {
-      throw new ValidationError("vertical is required", "vertical");
-    }
-
     const response = await this.apiService.createPlan(query, vertical);
 
     return new Plan(

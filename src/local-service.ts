@@ -104,19 +104,21 @@ export class LocalService {
 
     const plan = await this.planner.generatePlan(query, {
       tools: plannerTools,
+      temperature: 0.2,
+      maxTokens: 20_000,
     });
 
     if (!plan) {
       return {
         summary: undefined,
-        rawData: undefined,
+        data: undefined,
       };
     }
 
     const results = await plan.execute({ tools: plannerTools });
 
     return {
-      rawData: results,
+      data: results,
       planning: {
         status: "success",
         steps: plan.steps.map((step, index) => ({

@@ -84,7 +84,7 @@ const result = await kirha.search("Bitcoin price", {
 | Field | Type | Description |
 |-------|------|-------------|
 | `summary` | `undefined` | Not available in local mode |
-| `rawData` | `unknown?` | Execution results |
+| `data` | `unknown?` | Execution results |
 | `planning` | `PlanningInfo?` | Execution plan details |
 
 ---

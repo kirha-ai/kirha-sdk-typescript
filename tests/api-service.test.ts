@@ -59,7 +59,7 @@ describe("ApiService", () => {
         vertical_id: "crypto",
       });
       expect(result.summary).toBe("Bitcoin is at $50,000");
-      expect(result.rawData).toEqual({ price: 50000 });
+      expect(result.data).toEqual({ price: 50000 });
     });
 
     it("should include summarization when provided", async () => {

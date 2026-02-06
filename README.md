@@ -42,7 +42,7 @@ const kirha = new Kirha({
 
 const result = await kirha.search("What is the profit and loss of the largest USDC holder on Base?");
 
-console.log(result.rawResult);
+console.log(result.data);
 ```
 
 ## Examples
@@ -87,11 +87,10 @@ const plan = await kirha.plan("Compare trading volumes on Ethereum vs Base netwo
 
 // Review plan (Human in the loop or agent validation)
 console.log(plan.steps);
-console.log(plan.expiredAt);
 console.log(plan.usage);
 
 const result = await plan.execute();
-console.log(result.rawData);
+console.log(result.data);
 ```
 
 ### Direct tool calling
@@ -118,7 +117,7 @@ const kirha = new Kirha({
 });
 
 const result = await kirha.search("What is the profit and loss of the largest USDC holder on Base?");
-console.log(result.rawData);
+console.log(result.data);
 ```
 
 ## Documentation

@@ -23,18 +23,6 @@ describe("Kirha", () => {
   });
 
   describe("KirhaApi", () => {
-    it("should throw ValidationError when vertical is missing for search", async () => {
-      const kirha = new Kirha({ apiKey: "test-key" });
-
-      await expect(kirha.search("test query")).rejects.toThrow(ValidationError);
-    });
-
-    it("should throw ValidationError when vertical is missing for plan", async () => {
-      const kirha = new Kirha({ apiKey: "test-key" });
-
-      await expect(kirha.plan("test query")).rejects.toThrow(ValidationError);
-    });
-
     it("should use default vertical from config", async () => {
       const kirha = new Kirha({ apiKey: "test-key", vertical: "crypto" });
 

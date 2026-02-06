@@ -11,9 +11,9 @@ if (!process.env.KIRHA_API_KEY) {
 const kirha = new Kirha({
   apiKey: process.env.KIRHA_API_KEY,
   planner: "http://localhost:8080/v1",
-  vertical: "crypto",
+  vertical: "medical",
 });
 
-const result = await kirha.search("What is the profit and loss of the largest USDC holder on Base?");
+const result = await kirha.search("Find clinical trials for Alzheimer's disease in the United States in phase 1 with details");
 
-console.log(result.rawData);
+console.log(result.data);
