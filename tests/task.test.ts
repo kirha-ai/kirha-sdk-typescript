@@ -3,9 +3,6 @@ import { Task } from "../src/task";
 import { ApiService } from "../src/api-service";
 import { TaskStatus } from "../src/types";
 
-// Re-export TaskStatus as a value for test use
-const Status = TaskStatus;
-
 type MockFetch = ReturnType<
   typeof mock<(url: string, options: RequestInit) => Promise<Response>>
 >;
@@ -37,7 +34,7 @@ describe("Task", () => {
   describe("constructor", () => {
     it("should store id and initial status", () => {
       const service = new ApiService({ apiKey: "test-key" });
-      const task = new Task(service, "task-123", Status.Queued);
+      const task = new Task(service, "task-123", TaskStatus.Queued);
 
       expect(task.id).toBe("task-123");
       expect(task.isQueued).toBe(true);
@@ -49,14 +46,14 @@ describe("Task", () => {
     const service = new ApiService({ apiKey: "test-key" });
 
     it("isCompleted should return true for Completed status", () => {
-      const task = new Task(service, "task-1", Status.Completed);
+      const task = new Task(service, "task-1", TaskStatus.Completed);
       expect(task.isCompleted).toBe(true);
       expect(task.isFailed).toBe(false);
       expect(task.isPending).toBe(false);
     });
 
     it("isFailed should return true for Failed status", () => {
-      const task = new Task(service, "task-1", Status.Failed);
+      const task = new Task(service, "task-1", TaskStatus.Failed);
       expect(task.isFailed).toBe(true);
       expect(task.isCompleted).toBe(false);
       expect(task.isPending).toBe(false);
@@ -64,10 +61,10 @@ describe("Task", () => {
 
     it("isPending should return true for non-terminal statuses", () => {
       const pendingStatuses = [
-        Status.Queued,
-        Status.Researching,
-        Status.Validating,
-        Status.Summarizing,
+        TaskStatus.Queued,
+        TaskStatus.Researching,
+        TaskStatus.Validating,
+        TaskStatus.Summarizing,
       ];
 
       for (const status of pendingStatuses) {
@@ -77,25 +74,25 @@ describe("Task", () => {
     });
 
     it("isQueued should return true only for Queued status", () => {
-      const task = new Task(service, "task-1", Status.Queued);
+      const task = new Task(service, "task-1", TaskStatus.Queued);
       expect(task.isQueued).toBe(true);
 
-      const task2 = new Task(service, "task-1", Status.Researching);
+      const task2 = new Task(service, "task-1", TaskStatus.Researching);
       expect(task2.isQueued).toBe(false);
     });
 
     it("isResearching should return true only for Researching status", () => {
-      const task = new Task(service, "task-1", Status.Researching);
+      const task = new Task(service, "task-1", TaskStatus.Researching);
       expect(task.isResearching).toBe(true);
     });
 
     it("isValidating should return true only for Validating status", () => {
-      const task = new Task(service, "task-1", Status.Validating);
+      const task = new Task(service, "task-1", TaskStatus.Validating);
       expect(task.isValidating).toBe(true);
     });
 
     it("isSummarizing should return true only for Summarizing status", () => {
-      const task = new Task(service, "task-1", Status.Summarizing);
+      const task = new Task(service, "task-1", TaskStatus.Summarizing);
       expect(task.isSummarizing).toBe(true);
     });
 
@@ -116,18 +113,18 @@ describe("Task", () => {
       });
 
       const service = new ApiService({ apiKey: "test-key" });
-      const task = new Task(service, "task-123", Status.Queued);
+      const task = new Task(service, "task-123", TaskStatus.Queued);
 
       expect(task.isQueued).toBe(true);
 
       const response = await task.status();
-      expect(response.status).toBe(Status.Researching);
+      expect(response.status).toBe(TaskStatus.Researching);
       expect(task.isResearching).toBe(true);
     });
   });
 
   describe("result()", () => {
-    it("should fetch task result", async () => {
+    it("should fetch task result and update cached status", async () => {
       mockFetch({
         ok: true,
         status: 200,
@@ -143,9 +140,12 @@ describe("Task", () => {
       const service = new ApiService({ apiKey: "test-key" });
       const task = new Task(service, "task-123");
 
+      expect(task.isCompleted).toBe(false);
+
       const result = await task.result();
-      expect(result.status).toBe(Status.Completed);
+      expect(result.status).toBe(TaskStatus.Completed);
       expect(result.result).toBe("Done");
+      expect(task.isCompleted).toBe(true);
     });
   });
 
@@ -174,7 +174,7 @@ describe("Task", () => {
       const task = new Task(service, "task-123");
 
       const result = await task.wait({ pollInterval: 10 });
-      expect(result.status).toBe(Status.Completed);
+      expect(result.status).toBe(TaskStatus.Completed);
       expect(result.result).toBe("Final result");
     });
 
@@ -182,8 +182,7 @@ describe("Task", () => {
       mockFetch({
         ok: true,
         status: 200,
-        json: () =>
-          Promise.resolve({ id: "task-123", status: "Researching" }),
+        json: () => Promise.resolve({ id: "task-123", status: "Researching" }),
       });
 
       const service = new ApiService({ apiKey: "test-key" });

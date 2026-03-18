@@ -50,8 +50,8 @@ Poll the task until it reaches a terminal state (`Completed` or `Failed`). Retur
 
 ```typescript
 const result = await task.wait({
-  pollInterval: 2000,  // poll every 2 seconds
-  timeout: 600000,     // max 10 minutes (default)
+  pollInterval: 2_000,  // poll every 2 seconds
+  timeout: 600_000,     // max 10 minutes (default)
 });
 
 if (result.status === TaskStatus.Completed) {
@@ -173,8 +173,8 @@ interface TaskOptions {
 
 ```typescript
 interface TaskWaitOptions {
-  pollInterval?: number;  // default: 2000ms
-  timeout?: number;       // default: 600000ms (10 min)
+  pollInterval?: number;  // default: 2_000ms
+  timeout?: number;       // default: 600_000ms (10 min)
 }
 ```
 
@@ -186,7 +186,7 @@ interface TaskWaitOptions {
 
 ```typescript
 try {
-  const result = await task.wait({ timeout: 60000 });
+  const result = await task.wait({ timeout: 60_000 });
 } catch (error) {
   console.log("Task timed out");
 }

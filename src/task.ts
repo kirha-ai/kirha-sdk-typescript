@@ -9,7 +9,10 @@ import { TaskStatus } from "./types";
 const DEFAULT_POLL_INTERVAL = 2_000;
 const DEFAULT_10_MIN_TIMEOUT = 600_000;
 
-const TERMINAL_STATUSES: TaskStatus[] = [TaskStatus.Completed, TaskStatus.Failed];
+const TERMINAL_STATUSES: TaskStatus[] = [
+  TaskStatus.Completed,
+  TaskStatus.Failed,
+];
 const PENDING_STATUSES: TaskStatus[] = [
   TaskStatus.Queued,
   TaskStatus.Researching,
@@ -36,7 +39,9 @@ export class Task {
   }
 
   async result(): Promise<TaskResultResponse> {
-    return this.apiService.getTaskResult(this.id);
+    const response = await this.apiService.getTaskResult(this.id);
+    this.cachedStatus = response.status;
+    return response;
   }
 
   async wait(options?: TaskWaitOptions): Promise<TaskResultResponse> {
@@ -67,7 +72,10 @@ export class Task {
   }
 
   get isPending(): boolean {
-    return this.cachedStatus !== undefined && PENDING_STATUSES.includes(this.cachedStatus);
+    return (
+      this.cachedStatus !== undefined &&
+      PENDING_STATUSES.includes(this.cachedStatus)
+    );
   }
 
   get isQueued(): boolean {

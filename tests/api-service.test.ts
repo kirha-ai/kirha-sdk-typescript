@@ -188,7 +188,9 @@ describe("ApiService", () => {
 
       const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
 
-      expect(url).toBe("https://api.kirha.com/chat/v1/tools?vertical_id=crypto");
+      expect(url).toBe(
+        "https://api.kirha.com/chat/v1/tools?vertical_id=crypto",
+      );
       expect(options.method).toBe("GET");
       expect(result[0]?.name).toBe("get_price");
       expect(result[0]?.inputSchema).toEqual({});
