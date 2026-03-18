@@ -1,6 +1,7 @@
 import { ApiService } from "./api-service";
 import { LocalService } from "./local-service";
 import { Plan } from "./plan";
+import { Task } from "./task";
 import { ConfigurationError } from "./errors";
 import type {
   KirhaApiConfig,
@@ -13,6 +14,7 @@ import type {
   ToolsOptions,
   ToolExecutionResult,
   SummarizationConfig,
+  TaskOptions,
 } from "./types";
 
 export class KirhaApi {
@@ -65,6 +67,14 @@ export class KirhaApi {
     input: unknown,
   ): Promise<ToolExecutionResult> {
     return this.apiService.executeTool(toolName, input);
+  }
+
+  async task(query: string, options?: TaskOptions): Promise<Task> {
+    const response = await this.apiService.createTask(
+      query,
+      options?.instruction,
+    );
+    return new Task(this.apiService, response.id, response.status);
   }
 }
 

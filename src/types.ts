@@ -170,3 +170,38 @@ export interface ApiErrorResponse {
     details?: unknown;
   };
 }
+
+export enum TaskStatus {
+  Queued = "Queued",
+  Researching = "Researching",
+  Validating = "Validating",
+  Summarizing = "Summarizing",
+  Completed = "Completed",
+  Failed = "Failed",
+}
+
+export interface TaskOptions {
+  instruction?: string;
+}
+
+export interface TaskStatusResponse {
+  id: string;
+  status: TaskStatus;
+}
+
+export interface TaskResultResponse {
+  id: string;
+  status: TaskStatus;
+  result: string | null;
+  error: string | null;
+}
+
+export interface TaskWaitOptions {
+  pollInterval?: number;
+  timeout?: number;
+}
+
+export interface ApiCreateTaskRequest {
+  query: string;
+  instruction?: string;
+}

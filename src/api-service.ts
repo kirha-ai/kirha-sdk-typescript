@@ -11,6 +11,8 @@ import {
   ToolsResponseSchema,
   ToolExecutionResultSchema,
   ApiErrorResponseSchema,
+  TaskStatusSchema,
+  TaskResultSchema,
 } from "./schemas";
 import type {
   Tool,
@@ -22,9 +24,12 @@ import type {
   ApiPlanRequest,
   ApiPlanRunRequest,
   ApiExecuteToolRequest,
+  TaskStatusResponse,
+  TaskResultResponse,
+  ApiCreateTaskRequest,
 } from "./types";
 
-const BASE_URL = "https://api.kirha.ai/chat/v1";
+const BASE_URL = "https://api.kirha.com/chat/v1";
 const DEFAULT_TIMEOUT = 120_000;
 
 export interface ApiServiceConfig {
@@ -245,6 +250,27 @@ export class ApiService {
     };
 
     return this.post("/tools/execute", ToolExecutionResultSchema, body);
+  }
+
+  async createTask(
+    query: string,
+    instruction?: string,
+  ): Promise<TaskStatusResponse> {
+    const body: ApiCreateTaskRequest = { query };
+
+    if (instruction) {
+      body.instruction = instruction;
+    }
+
+    return this.post("/tasks", TaskStatusSchema, body);
+  }
+
+  async getTaskStatus(taskId: string): Promise<TaskStatusResponse> {
+    return this.get(`/tasks/${taskId}/status`, TaskStatusSchema);
+  }
+
+  async getTaskResult(taskId: string): Promise<TaskResultResponse> {
+    return this.get(`/tasks/${taskId}/result`, TaskResultSchema);
   }
 }
 
