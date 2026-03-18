@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TaskStatus } from "./types";
 
 export const ToolSchema = z
   .object({
@@ -173,3 +174,14 @@ export const ApiErrorResponseSchema = z.union([
     details: undefined,
   })),
 ]);
+
+// Task schemas
+export const TaskStatusSchema = z.object({
+  id: z.string(),
+  status: z.nativeEnum(TaskStatus),
+});
+
+export const TaskResultSchema = TaskStatusSchema.extend({
+  result: z.string().nullable(),
+  error: z.string().nullable(),
+});

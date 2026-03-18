@@ -105,6 +105,17 @@ const result = await kirha.executeTool("zerion_getEthereumWalletProfitAndLoss", 
 });
 ```
 
+### Tasks
+
+```typescript
+const kirha = new Kirha({ apiKey: "your-api-key" });
+
+const task = await kirha.task("Compare the AI strategies of Google, Microsoft, and Meta: key acquisitions, patent filings, and recent product launches");
+const result = await task.wait();
+
+console.log(result.result);
+```
+
 ### Local planning with Kirha tools
 
 ```typescript
@@ -124,6 +135,7 @@ console.log(result.data);
 
 - [API Mode](./docs/api-mode.md) - Full API reference
 - [Local Mode](./docs/local-mode.md) - Local planning with hybrid tools
+- [Tasks](./docs/tasks.md) - Async tasks with polling
 
 ## Errors
 

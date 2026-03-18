@@ -1,6 +1,7 @@
 import { describe, it, expect, mock, afterEach } from "bun:test";
 import { ApiService } from "../src/api-service";
 import { ApiError, AuthenticationError, RateLimitError } from "../src/errors";
+import { TaskStatus } from "../src/types";
 
 type MockFetch = ReturnType<
   typeof mock<(url: string, options: RequestInit) => Promise<Response>>
@@ -52,7 +53,7 @@ describe("ApiService", () => {
       expect(globalThis.fetch).toHaveBeenCalledTimes(1);
       const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
 
-      expect(url).toBe("https://api.kirha.ai/chat/v1/search");
+      expect(url).toBe("https://api.kirha.com/chat/v1/search");
       expect(options.method).toBe("POST");
       expect(JSON.parse(options.body as string)).toEqual({
         query: "bitcoin price",
@@ -135,7 +136,7 @@ describe("ApiService", () => {
 
       const [url] = mockFn.mock.calls[0] as [string, RequestInit];
 
-      expect(url).toBe("https://api.kirha.ai/chat/v1/search/plan");
+      expect(url).toBe("https://api.kirha.com/chat/v1/search/plan");
       expect(result.id).toBe("plan-123");
       expect(result.status).toBe("pending_confirmation");
       expect(result.steps).toHaveLength(1);
@@ -159,7 +160,7 @@ describe("ApiService", () => {
       const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
       const body = JSON.parse(options.body as string);
 
-      expect(url).toBe("https://api.kirha.ai/chat/v1/search/plan/run");
+      expect(url).toBe("https://api.kirha.com/chat/v1/search/plan/run");
       expect(body.plan_id).toBe("plan-123");
     });
   });
@@ -187,7 +188,7 @@ describe("ApiService", () => {
 
       const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
 
-      expect(url).toBe("https://api.kirha.ai/chat/v1/tools?vertical_id=crypto");
+      expect(url).toBe("https://api.kirha.com/chat/v1/tools?vertical_id=crypto");
       expect(options.method).toBe("GET");
       expect(result[0]?.name).toBe("get_price");
       expect(result[0]?.inputSchema).toEqual({});
@@ -215,13 +216,116 @@ describe("ApiService", () => {
       const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
       const body = JSON.parse(options.body as string);
 
-      expect(url).toBe("https://api.kirha.ai/chat/v1/tools/execute");
+      expect(url).toBe("https://api.kirha.com/chat/v1/tools/execute");
       expect(body).toEqual({
         tool_name: "get_price",
         input: { symbol: "BTC" },
       });
       expect(result.toolName).toBe("get_price");
       expect(result.isError).toBe(false);
+    });
+  });
+
+  describe("createTask", () => {
+    it("should call POST /tasks with query", async () => {
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ id: "task-123", status: "Queued" }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      const result = await service.createTask("bitcoin price");
+
+      const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
+      const body = JSON.parse(options.body as string);
+
+      expect(url).toBe("https://api.kirha.com/chat/v1/tasks");
+      expect(body).toEqual({ query: "bitcoin price" });
+      expect(result.id).toBe("task-123");
+      expect(result.status).toBe(TaskStatus.Queued);
+    });
+
+    it("should include instruction when provided", async () => {
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ id: "task-123", status: "Queued" }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      await service.createTask("bitcoin price", "Be concise");
+
+      const [, options] = mockFn.mock.calls[0] as [string, RequestInit];
+      const body = JSON.parse(options.body as string);
+
+      expect(body.instruction).toBe("Be concise");
+    });
+  });
+
+  describe("getTaskStatus", () => {
+    it("should call GET /tasks/{id}/status", async () => {
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ id: "task-123", status: "Researching" }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      const result = await service.getTaskStatus("task-123");
+
+      const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
+
+      expect(url).toBe("https://api.kirha.com/chat/v1/tasks/task-123/status");
+      expect(options.method).toBe("GET");
+      expect(result.status).toBe(TaskStatus.Researching);
+    });
+  });
+
+  describe("getTaskResult", () => {
+    it("should call GET /tasks/{id}/result", async () => {
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            id: "task-123",
+            status: "Completed",
+            result: "Bitcoin is at $50,000",
+            error: null,
+          }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      const result = await service.getTaskResult("task-123");
+
+      const [url] = mockFn.mock.calls[0] as [string, RequestInit];
+
+      expect(url).toBe("https://api.kirha.com/chat/v1/tasks/task-123/result");
+      expect(result.status).toBe(TaskStatus.Completed);
+      expect(result.result).toBe("Bitcoin is at $50,000");
+      expect(result.error).toBeNull();
+    });
+
+    it("should return error for failed task", async () => {
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            id: "task-123",
+            status: "Failed",
+            result: null,
+            error: "Something went wrong",
+          }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      const result = await service.getTaskResult("task-123");
+
+      expect(result.status).toBe(TaskStatus.Failed);
+      expect(result.result).toBeNull();
+      expect(result.error).toBe("Something went wrong");
     });
   });
 
