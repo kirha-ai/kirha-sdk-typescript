@@ -76,6 +76,14 @@ export class KirhaApi {
     );
     return new Task(this.apiService, response.id, response.status);
   }
+
+  getPlan(id: string): Plan {
+    return Plan.fromId(this.apiService, id, this.defaultSummarization);
+  }
+
+  getTask(id: string): Task {
+    return new Task(this.apiService, id);
+  }
 }
 
 export class KirhaLocal {

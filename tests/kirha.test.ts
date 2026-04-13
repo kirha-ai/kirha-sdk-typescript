@@ -1,5 +1,7 @@
 import { describe, it, expect } from "bun:test";
 import { Kirha, KirhaApi, KirhaLocal } from "../src/kirha";
+import { Plan } from "../src/plan";
+import { Task } from "../src/task";
 import { ConfigurationError, ValidationError } from "../src/errors";
 
 describe("Kirha", () => {
@@ -42,6 +44,33 @@ describe("Kirha", () => {
       expect(typeof kirha.plan).toBe("function");
       expect(typeof kirha.tools).toBe("function");
       expect(typeof kirha.executeTool).toBe("function");
+      expect(typeof kirha.task).toBe("function");
+      expect(typeof kirha.getPlan).toBe("function");
+      expect(typeof kirha.getTask).toBe("function");
+    });
+  });
+
+  describe("getPlan", () => {
+    it("should rehydrate a Plan from an id without a server call", () => {
+      const kirha = new Kirha({ apiKey: "test-key" }) as KirhaApi;
+      const plan = kirha.getPlan("plan_abc123");
+
+      expect(plan).toBeInstanceOf(Plan);
+      expect(plan.id).toBe("plan_abc123");
+      expect(typeof plan.execute).toBe("function");
+    });
+  });
+
+  describe("getTask", () => {
+    it("should rehydrate a Task from an id without a server call", () => {
+      const kirha = new Kirha({ apiKey: "test-key" }) as KirhaApi;
+      const task = kirha.getTask("tsk_abc123");
+
+      expect(task).toBeInstanceOf(Task);
+      expect(task.id).toBe("tsk_abc123");
+      expect(typeof task.status).toBe("function");
+      expect(typeof task.result).toBe("function");
+      expect(typeof task.wait).toBe("function");
     });
   });
 
