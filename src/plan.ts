@@ -51,4 +51,26 @@ export class Plan {
       includePlanning: options?.includePlanning,
     });
   }
+
+  // No GET /search/plan/{id} endpoint exists, so we stub every field except
+  // `id`. Only `execute()` is meaningful on the returned instance — use
+  // `kirha.plan(query)` if you need to inspect steps/usage/status.
+  static fromId(
+    apiService: ApiService,
+    id: string,
+    defaultSummarization?: SummarizationConfig,
+  ): Plan {
+    return new Plan(
+      apiService,
+      {
+        id,
+        status: "unknown",
+        steps: [],
+        usage: { estimated: 0, consumed: 0 },
+      },
+      "",
+      undefined,
+      defaultSummarization,
+    );
+  }
 }
