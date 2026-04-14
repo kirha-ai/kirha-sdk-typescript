@@ -19,6 +19,7 @@ import type {
   ToolExecutionResult,
   SearchResult,
   PlanResponse,
+  PlanningRuntime,
   SummarizationConfig,
   ApiSearchRequest,
   ApiPlanRequest,
@@ -178,6 +179,7 @@ export class ApiService {
       summarization?: SummarizationConfig | false;
       includeData?: boolean;
       includePlanning?: boolean;
+      planningRuntime?: PlanningRuntime;
     },
   ): Promise<SearchResult> {
     const body: ApiSearchRequest = {
@@ -195,6 +197,10 @@ export class ApiService {
 
     if (options?.includePlanning !== undefined) {
       body.include_planning = options.includePlanning;
+    }
+
+    if (options?.planningRuntime !== undefined) {
+      body.planning_runtime = options.planningRuntime;
     }
 
     return this.post("/search", SearchResultSchema, body);
