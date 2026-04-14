@@ -85,6 +85,22 @@ describe("ApiService", () => {
       });
     });
 
+    it("should include planning_runtime when provided", async () => {
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({}),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      await service.search("query", "crypto", { planningRuntime: "fast" });
+
+      const [, options] = mockFn.mock.calls[0] as [string, RequestInit];
+      const body = JSON.parse(options.body as string);
+
+      expect(body.planning_runtime).toBe("fast");
+    });
+
     it("should handle string summarization", async () => {
       mockFetch({
         ok: true,

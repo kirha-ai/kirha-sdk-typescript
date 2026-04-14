@@ -54,11 +54,18 @@ export interface ToolExecutionResult {
   };
 }
 
+export enum PlanningRuntime {
+  Standard = "standard",
+  Fast = "fast",
+  Deterministic = "deterministic",
+}
+
 export interface SearchOptions {
   vertical?: string;
   summarization?: SummarizationConfig | false;
   includeData?: boolean;
   includePlanning?: boolean;
+  planningRuntime?: PlanningRuntime;
 }
 
 export interface LocalSearchOptions {
@@ -140,6 +147,7 @@ export interface ApiSearchRequest {
   };
   include_raw_data?: boolean;
   include_planning?: boolean;
+  planning_runtime?: PlanningRuntime;
 }
 
 export interface ApiPlanRequest {

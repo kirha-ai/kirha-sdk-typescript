@@ -42,6 +42,7 @@ export class KirhaApi {
       summarization,
       includeData: options?.includeData,
       includePlanning: options?.includePlanning,
+      planningRuntime: options?.planningRuntime,
     });
   }
 

@@ -1,7 +1,7 @@
 export { Kirha, KirhaApi, KirhaLocal } from "./kirha";
 export { Plan } from "./plan";
 export { Task } from "./task";
-export { TaskStatus } from "./types";
+export { TaskStatus, PlanningRuntime } from "./types";
 
 export type {
   KirhaApiConfig,
