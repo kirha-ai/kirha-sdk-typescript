@@ -10,9 +10,7 @@ if (!process.env.KIRHA_API_KEY) {
 
 const kirha = new Kirha({ apiKey: process.env.KIRHA_API_KEY });
 
-const plan = await kirha.plan("What is the profit and loss of the largest USDC holder on Base?", {
-  vertical: "crypto",
-});
+const plan = await kirha.plan("What is the profit and loss of the largest USDC holder on Base?");
 
 console.log("Plan ID:", plan.id);
 console.log("Steps:", plan.steps);

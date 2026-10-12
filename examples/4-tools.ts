@@ -10,7 +10,7 @@ if (!process.env.KIRHA_API_KEY) {
 
 const kirha = new Kirha({ apiKey: process.env.KIRHA_API_KEY });
 
-const tools = await kirha.tools({ vertical: "crypto" });
+const tools = await kirha.tools({ focus: "crypto" });
 console.log(tools.map(t => t.name));
 
 const result = await kirha.executeTool("zerion_getEthereumWalletProfitAndLoss", {

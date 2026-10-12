@@ -11,7 +11,7 @@ if (!process.env.KIRHA_API_KEY) {
 const kirha = new Kirha({ apiKey: process.env.KIRHA_API_KEY });
 
 const result = await kirha.search("What is the profit and loss of the largest USDC holder on Base?", {
-  vertical: "crypto",
+  focus: "crypto",
 });
 
 console.log(result.data);

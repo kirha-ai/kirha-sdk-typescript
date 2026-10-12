@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/banner.png" alt="Kirha SDK" />
+  <img src="./assets/banner.png" alt="KIRHA SDK" />
 </p>
 
 <p align="center">
@@ -9,14 +9,14 @@
 </p>
 
 <p align="center">
-  <a href="https://kirha.com"><b>🦋 Kirha</b></a> •
+  <a href="https://kirha.com"><b>🦋 KIRHA</b></a> •
   <a href="https://docs.kirha.com"><b>📚 Documentation</b></a> •
   <a href="https://app.kirha.com/auth/register"><b>🔑 Get an API key</b></a>
 </p>
 
-# Kirha SDK
+# KIRHA SDK
 
-TypeScript SDK for the Kirha API.
+TypeScript SDK for the KIRHA API.
 
 ## Installation
 
@@ -37,7 +37,7 @@ import { Kirha } from "kirha";
 
 const kirha = new Kirha({
   apiKey: process.env.KIRHA_API_KEY,
-  vertical: "crypto",
+  focus: "crypto",
 });
 
 const result = await kirha.search("What is the profit and loss of the largest USDC holder on Base?");
@@ -53,8 +53,7 @@ console.log(result.data);
 const kirha = new Kirha({ apiKey: "your-api-key" });
 
 const result = await kirha.search("What is the profit and loss of the largest USDC holder on Base?", {
-  vertical: "crypto",
-  summarization: "kirha-flash",
+  summarization: true,
 });
 
 console.log(result.summary);
@@ -66,9 +65,7 @@ console.log(result.summary);
 const kirha = new Kirha({ apiKey: "your-api-key" });
 
 const result = await kirha.search("What is the profit and loss of the largest USDC holder on Base?", {
-  vertical: "crypto",
   summarization: {
-    model: "kirha-flash",
     instruction: "Format the response as a table with columns: Address, PnL, Percentage",
   },
 });
@@ -82,7 +79,6 @@ console.log(result.summary);
 const kirha = new Kirha({ apiKey: "your-api-key" });
 
 const plan = await kirha.plan("Compare trading volumes on Ethereum vs Base network", {
-  vertical: "crypto",
 });
 
 // Review plan (Human in the loop or agent validation)
@@ -96,7 +92,7 @@ console.log(result.data);
 ### Direct tool calling
 
 ```typescript
-const tools = await kirha.tools({ vertical: "crypto" });
+const tools = await kirha.tools({ focus: "crypto" });
 console.log(tools.map(t => t.name));
 
 const result = await kirha.executeTool("zerion_getEthereumWalletProfitAndLoss", {
@@ -105,18 +101,7 @@ const result = await kirha.executeTool("zerion_getEthereumWalletProfitAndLoss", 
 });
 ```
 
-### Tasks
-
-```typescript
-const kirha = new Kirha({ apiKey: "your-api-key" });
-
-const task = await kirha.task("Compare the AI strategies of Google, Microsoft, and Meta: key acquisitions, patent filings, and recent product launches");
-const result = await task.wait();
-
-console.log(result.result);
-```
-
-### Local planning with Kirha tools
+### Local planning with KIRHA tools
 
 ```typescript
 import { Kirha } from "kirha";
@@ -124,7 +109,7 @@ import { Kirha } from "kirha";
 const kirha = new Kirha({
   apiKey: "your-api-key",
   planner: "http://localhost:8080/v1", // any OpenAI completion api endpoint running our open source kirha/planner model
-  vertical: "crypto",
+  focus: "crypto",
 });
 
 const result = await kirha.search("What is the profit and loss of the largest USDC holder on Base?");
@@ -133,9 +118,8 @@ console.log(result.data);
 
 ## Documentation
 
-- [API Mode](./docs/api-mode.md) - Full API reference
-- [Local Mode](./docs/local-mode.md) - Local planning with hybrid tools
-- [Tasks](./docs/tasks.md) - Async tasks with polling
+- [Search API](./docs/search-api.md) - Full API reference
+- [Local planning](./docs/local-planning.md) - Local planning with hybrid tools
 
 ## Errors
 

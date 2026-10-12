@@ -1,7 +1,12 @@
 import { describe, it, expect, mock, afterEach } from "bun:test";
 import { ApiService } from "../src/api-service";
-import { ApiError, AuthenticationError, RateLimitError } from "../src/errors";
-import { TaskStatus } from "../src/types";
+import {
+  ApiError,
+  AuthenticationError,
+  PlanExpiredError,
+  RateLimitError,
+} from "../src/errors";
+import { PlanningRuntime } from "../src/types";
 
 type MockFetch = ReturnType<
   typeof mock<(url: string, options: RequestInit) => Promise<Response>>
@@ -57,7 +62,7 @@ describe("ApiService", () => {
       expect(options.method).toBe("POST");
       expect(JSON.parse(options.body as string)).toEqual({
         query: "bitcoin price",
-        vertical_id: "crypto",
+        focus: "crypto",
       });
       expect(result.summary).toBe("Bitcoin is at $50,000");
       expect(result.data).toEqual({ price: 50000 });
@@ -72,7 +77,7 @@ describe("ApiService", () => {
 
       const service = new ApiService({ apiKey: "test-key" });
       await service.search("query", "crypto", {
-        summarization: { model: "kirha-flash", instruction: "Be brief" },
+        summarization: { instruction: "Be brief" },
       });
 
       const [, options] = mockFn.mock.calls[0] as [string, RequestInit];
@@ -80,7 +85,6 @@ describe("ApiService", () => {
 
       expect(body.summarization).toEqual({
         enable: true,
-        model: "kirha-flash",
         instruction: "Be brief",
       });
     });
@@ -93,7 +97,9 @@ describe("ApiService", () => {
       });
 
       const service = new ApiService({ apiKey: "test-key" });
-      await service.search("query", "crypto", { planningRuntime: "fast" });
+      await service.search("query", "crypto", {
+        planningRuntime: PlanningRuntime.Fast,
+      });
 
       const [, options] = mockFn.mock.calls[0] as [string, RequestInit];
       const body = JSON.parse(options.body as string);
@@ -101,7 +107,7 @@ describe("ApiService", () => {
       expect(body.planning_runtime).toBe("fast");
     });
 
-    it("should handle string summarization", async () => {
+    it("should enable summarization with true", async () => {
       mockFetch({
         ok: true,
         status: 200,
@@ -110,16 +116,13 @@ describe("ApiService", () => {
 
       const service = new ApiService({ apiKey: "test-key" });
       await service.search("query", "crypto", {
-        summarization: "kirha",
+        summarization: true,
       });
 
       const [, options] = mockFn.mock.calls[0] as [string, RequestInit];
       const body = JSON.parse(options.body as string);
 
-      expect(body.summarization).toEqual({
-        enable: true,
-        model: "kirha",
-      });
+      expect(body.summarization).toEqual({ enable: true });
     });
   });
 
@@ -150,9 +153,13 @@ describe("ApiService", () => {
       const service = new ApiService({ apiKey: "test-key" });
       const result = await service.createPlan("query", "crypto");
 
-      const [url] = mockFn.mock.calls[0] as [string, RequestInit];
+      const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
 
       expect(url).toBe("https://api.kirha.com/chat/v1/search/plan");
+      expect(JSON.parse(options.body as string)).toEqual({
+        query: "query",
+        focus: "crypto",
+      });
       expect(result.id).toBe("plan-123");
       expect(result.status).toBe("pending_confirmation");
       expect(result.steps).toHaveLength(1);
@@ -160,10 +167,34 @@ describe("ApiService", () => {
       expect(result.usage.estimated).toBe(10);
       expect(result.account?.balance).toBe(100);
     });
+
+    it("should include planning_runtime when provided", async () => {
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            id: "search_1",
+            status: "pending_confirmation",
+            steps: [],
+            usage: { estimated: 0, consumed: 0 },
+          }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      await service.createPlan("query", undefined, PlanningRuntime.Fast);
+
+      const [, options] = mockFn.mock.calls[0] as [string, RequestInit];
+
+      expect(JSON.parse(options.body as string)).toEqual({
+        query: "query",
+        planning_runtime: "fast",
+      });
+    });
   });
 
   describe("executePlan", () => {
-    it("should call POST /search/plan/run with plan_id", async () => {
+    it("should call POST /search/plan/run with the plan id", async () => {
       mockFetch({
         ok: true,
         status: 200,
@@ -177,7 +208,25 @@ describe("ApiService", () => {
       const body = JSON.parse(options.body as string);
 
       expect(url).toBe("https://api.kirha.com/chat/v1/search/plan/run");
-      expect(body.plan_id).toBe("plan-123");
+      expect(body).toEqual({ id: "plan-123" });
+    });
+
+    it("should throw PlanExpiredError when the plan has expired", async () => {
+      mockFetch({
+        ok: false,
+        status: 400,
+        json: () =>
+          Promise.resolve({
+            type: "CONVERSATION_TURN_TIMEOUT",
+            reason: "Plan expired.",
+          }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+
+      await expect(service.executePlan("plan-123")).rejects.toThrow(
+        PlanExpiredError,
+      );
     });
   });
 
@@ -241,109 +290,6 @@ describe("ApiService", () => {
       });
       expect(result.toolName).toBe("get_price");
       expect(result.isError).toBe(false);
-    });
-  });
-
-  describe("createTask", () => {
-    it("should call POST /tasks with query", async () => {
-      mockFetch({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ id: "task-123", status: "Queued" }),
-      });
-
-      const service = new ApiService({ apiKey: "test-key" });
-      const result = await service.createTask("bitcoin price");
-
-      const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
-      const body = JSON.parse(options.body as string);
-
-      expect(url).toBe("https://api.kirha.com/chat/v1/tasks");
-      expect(body).toEqual({ query: "bitcoin price" });
-      expect(result.id).toBe("task-123");
-      expect(result.status).toBe(TaskStatus.Queued);
-    });
-
-    it("should include instruction when provided", async () => {
-      mockFetch({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ id: "task-123", status: "Queued" }),
-      });
-
-      const service = new ApiService({ apiKey: "test-key" });
-      await service.createTask("bitcoin price", "Be concise");
-
-      const [, options] = mockFn.mock.calls[0] as [string, RequestInit];
-      const body = JSON.parse(options.body as string);
-
-      expect(body.instruction).toBe("Be concise");
-    });
-  });
-
-  describe("getTaskStatus", () => {
-    it("should call GET /tasks/{id}/status", async () => {
-      mockFetch({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ id: "task-123", status: "Researching" }),
-      });
-
-      const service = new ApiService({ apiKey: "test-key" });
-      const result = await service.getTaskStatus("task-123");
-
-      const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
-
-      expect(url).toBe("https://api.kirha.com/chat/v1/tasks/task-123/status");
-      expect(options.method).toBe("GET");
-      expect(result.status).toBe(TaskStatus.Researching);
-    });
-  });
-
-  describe("getTaskResult", () => {
-    it("should call GET /tasks/{id}/result", async () => {
-      mockFetch({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            id: "task-123",
-            status: "Completed",
-            result: "Bitcoin is at $50,000",
-            error: null,
-          }),
-      });
-
-      const service = new ApiService({ apiKey: "test-key" });
-      const result = await service.getTaskResult("task-123");
-
-      const [url] = mockFn.mock.calls[0] as [string, RequestInit];
-
-      expect(url).toBe("https://api.kirha.com/chat/v1/tasks/task-123/result");
-      expect(result.status).toBe(TaskStatus.Completed);
-      expect(result.result).toBe("Bitcoin is at $50,000");
-      expect(result.error).toBeNull();
-    });
-
-    it("should return error for failed task", async () => {
-      mockFetch({
-        ok: true,
-        status: 200,
-        json: () =>
-          Promise.resolve({
-            id: "task-123",
-            status: "Failed",
-            result: null,
-            error: "Something went wrong",
-          }),
-      });
-
-      const service = new ApiService({ apiKey: "test-key" });
-      const result = await service.getTaskResult("task-123");
-
-      expect(result.status).toBe(TaskStatus.Failed);
-      expect(result.result).toBeNull();
-      expect(result.error).toBe("Something went wrong");
     });
   });
 

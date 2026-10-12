@@ -1,5 +1,5 @@
-// Local planning with custom tools: combine Kirha API tools with your own local tools.
-// The planner will orchestrate both Kirha tools (e.g., Zerion) and your custom handlers.
+// Local planning with custom tools: combine KIRHA API tools with your own local tools.
+// The planner will orchestrate both KIRHA tools (e.g., Zerion) and your custom handlers.
 
 import { Kirha, type LocalTool } from "../src";
 
@@ -37,7 +37,7 @@ const customTools: LocalTool[] = [
 const kirha = new Kirha({
   apiKey: process.env.KIRHA_API_KEY,
   planner: "http://localhost:8080/v1",
-  vertical: "crypto",
+  focus: "crypto",
   tools: customTools,
 });
 

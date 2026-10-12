@@ -1,7 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import { Kirha, KirhaApi, KirhaLocal } from "../src/kirha";
 import { Plan } from "../src/plan";
-import { Task } from "../src/task";
 import { ConfigurationError, ValidationError } from "../src/errors";
 
 describe("Kirha", () => {
@@ -25,8 +24,8 @@ describe("Kirha", () => {
   });
 
   describe("KirhaApi", () => {
-    it("should use default vertical from config", async () => {
-      const kirha = new Kirha({ apiKey: "test-key", vertical: "crypto" });
+    it("should use default focus from config", async () => {
+      const kirha = new Kirha({ apiKey: "test-key", focus: "crypto" });
 
       // This will fail with network error since we're not mocking,
       // but it should NOT throw ValidationError
@@ -44,33 +43,18 @@ describe("Kirha", () => {
       expect(typeof kirha.plan).toBe("function");
       expect(typeof kirha.tools).toBe("function");
       expect(typeof kirha.executeTool).toBe("function");
-      expect(typeof kirha.task).toBe("function");
       expect(typeof kirha.getPlan).toBe("function");
-      expect(typeof kirha.getTask).toBe("function");
     });
   });
 
   describe("getPlan", () => {
     it("should rehydrate a Plan from an id without a server call", () => {
       const kirha = new Kirha({ apiKey: "test-key" }) as KirhaApi;
-      const plan = kirha.getPlan("plan_abc123");
+      const plan = kirha.getPlan("search_abc123");
 
       expect(plan).toBeInstanceOf(Plan);
-      expect(plan.id).toBe("plan_abc123");
+      expect(plan.id).toBe("search_abc123");
       expect(typeof plan.execute).toBe("function");
-    });
-  });
-
-  describe("getTask", () => {
-    it("should rehydrate a Task from an id without a server call", () => {
-      const kirha = new Kirha({ apiKey: "test-key" }) as KirhaApi;
-      const task = kirha.getTask("tsk_abc123");
-
-      expect(task).toBeInstanceOf(Task);
-      expect(task.id).toBe("tsk_abc123");
-      expect(typeof task.status).toBe("function");
-      expect(typeof task.result).toBe("function");
-      expect(typeof task.wait).toBe("function");
     });
   });
 
