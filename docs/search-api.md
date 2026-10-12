@@ -1,6 +1,6 @@
 # Search API
 
-Full access to the Kirha Search API with search, planning, and tool execution.
+Full access to the KIRHA Search API with search, planning, and tool execution.
 
 ## Configuration
 
@@ -9,8 +9,7 @@ import { Kirha } from "kirha";
 
 const kirha = new Kirha({
   apiKey: "your-api-key",
-  vertical: "crypto",
-  summarization: "kirha-flash",
+  summarization: true,
 });
 ```
 
@@ -18,17 +17,14 @@ const kirha = new Kirha({
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `apiKey` | `string` | Yes | Your Kirha API key |
-| `vertical` | `string` | No | Default vertical for all requests |
+| `apiKey` | `string` | Yes | Your KIRHA API key |
+| `focus` | `string` | No | Default focus for all requests. Vertical slug to focus on (`crypto`, `insurance`, `company`, ...). Omit it to search every vertical |
 | `summarization` | `SummarizationConfig` | No | Default summarization config |
 
 ### SummarizationConfig
 
 ```typescript
-type SummarizationConfig =
-  | "kirha"
-  | "kirha-flash"
-  | { model: "kirha" | "kirha-flash"; instruction?: string };
+type SummarizationConfig = true | { instruction?: string };
 ```
 
 ---
@@ -40,9 +36,9 @@ type SummarizationConfig =
 Execute a search query with optional summarization.
 
 ```typescript
-const result = await kirha.search("Bitcoin price", {
-  vertical: "crypto",
-  summarization: { model: "kirha-flash", instruction: "Be concise" },
+const result = await kirha.search("List top 10 stablecoins yield on Ethereum", {
+  focus: "crypto",
+  summarization: { instruction: "Be concise" },
   includeData: true,
   includePlanning: true,
 });
@@ -61,10 +57,11 @@ console.log(result.usage?.consumed);
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `vertical` | `string` | Constructor default | Data vertical |
+| `focus` | `string` | Constructor default | Vertical slug to focus on (`crypto`, `insurance`, `company`, ...). Omit it to search every vertical |
 | `summarization` | `SummarizationConfig \| false` | Constructor default | Summarization config or `false` to disable |
 | `includeData` | `boolean` | `true` | Include provider data |
 | `includePlanning` | `boolean` | `false` | Include execution plan details |
+| `planningRuntime` | `PlanningRuntime` | `PlanningRuntime.Standard` | `Standard` is more accurate, `Fast` answers sooner but is less accurate |
 
 #### Returns: `SearchResult`
 
@@ -83,9 +80,9 @@ console.log(result.usage?.consumed);
 Generate an execution plan without executing it. Plans are valid for 5 minutes.
 
 ```typescript
-const plan = await kirha.plan("Compare BTC and ETH", {
-  vertical: "crypto",
-  summarization: "kirha-flash",
+const plan = await kirha.plan("Summarize latest NVIDIA earning calls", {
+  summarization: true,
+  planningRuntime: PlanningRuntime.Fast,
 });
 
 console.log(plan.id);
@@ -104,8 +101,9 @@ console.log(plan.usage);
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `vertical` | `string` | Constructor default | Data vertical |
+| `focus` | `string` | Constructor default | Vertical slug to focus on (`crypto`, `insurance`, `company`, ...). Omit it to search every vertical |
 | `summarization` | `SummarizationConfig` | Constructor default | Summarization for execution |
+| `planningRuntime` | `PlanningRuntime` | `PlanningRuntime.Standard` | `Standard` is more accurate, `Fast` answers sooner but is less accurate |
 
 #### Returns: `Plan`
 
@@ -113,7 +111,7 @@ console.log(plan.usage);
 |-------|------|-------------|
 | `id` | `string` | Unique plan identifier |
 | `query` | `string` | Original query |
-| `vertical` | `string` | Vertical used |
+| `focus` | `string?` | Focus used |
 | `status` | `string` | Plan status |
 | `steps` | `PlanStepResponse[]` | Planned execution steps |
 | `reason` | `string?` | Reasoning for the plan |
@@ -137,7 +135,7 @@ Execute a previously created plan.
 
 ```typescript
 const result = await plan.execute({
-  summarization: "kirha",
+  summarization: { instruction: "Answer in French" },
   includeData: true,
   includePlanning: true,
 });
@@ -153,14 +151,16 @@ const result = await plan.execute({
 
 #### Returns: `SearchResult`
 
+Throws `PlanExpiredError` if the plan is older than 5 minutes.
+
 ---
 
 ### `tools(options)`
 
-List available tools for a vertical.
+List the tools of a vertical.
 
 ```typescript
-const tools = await kirha.tools({ vertical: "crypto" });
+const tools = await kirha.tools({ focus: "crypto" });
 
 for (const tool of tools) {
   console.log(tool.name, tool.description);
@@ -171,7 +171,7 @@ for (const tool of tools) {
 
 | Option | Type | Required | Description |
 |--------|------|----------|-------------|
-| `vertical` | `string` | Yes | Data vertical |
+| `focus` | `string` | Yes | Vertical slug (`crypto`, `insurance`, `company`, ...) |
 
 #### Returns: `Tool[]`
 

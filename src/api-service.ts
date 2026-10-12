@@ -3,6 +3,7 @@ import {
   AuthenticationError,
   RateLimitError,
   NetworkError,
+  PlanExpiredError,
   type ApiErrorCode,
 } from "./errors";
 import {
@@ -11,8 +12,6 @@ import {
   ToolsResponseSchema,
   ToolExecutionResultSchema,
   ApiErrorResponseSchema,
-  TaskStatusSchema,
-  TaskResultSchema,
 } from "./schemas";
 import type {
   Tool,
@@ -25,9 +24,7 @@ import type {
   ApiPlanRequest,
   ApiPlanRunRequest,
   ApiExecuteToolRequest,
-  TaskStatusResponse,
-  TaskResultResponse,
-  ApiCreateTaskRequest,
+  ApiSummarization,
 } from "./types";
 
 const BASE_URL = "https://api.kirha.com/chat/v1";
@@ -174,7 +171,7 @@ export class ApiService {
 
   async search(
     query: string,
-    vertical?: string,
+    focus?: string,
     options?: {
       summarization?: SummarizationConfig | false;
       includeData?: boolean;
@@ -184,7 +181,7 @@ export class ApiService {
   ): Promise<SearchResult> {
     const body: ApiSearchRequest = {
       query,
-      ...(vertical && { vertical_id: vertical }),
+      ...(focus && { focus }),
     };
 
     if (options?.summarization !== false && options?.summarization) {
@@ -206,10 +203,15 @@ export class ApiService {
     return this.post("/search", SearchResultSchema, body);
   }
 
-  async createPlan(query: string, vertical?: string): Promise<PlanResponse> {
+  async createPlan(
+    query: string,
+    focus?: string,
+    planningRuntime?: PlanningRuntime,
+  ): Promise<PlanResponse> {
     const body: ApiPlanRequest = {
       query,
-      ...(vertical && { vertical_id: vertical }),
+      ...(focus && { focus }),
+      ...(planningRuntime && { planning_runtime: planningRuntime }),
     };
 
     return this.post("/search/plan", PlanResponseSchema, body);
@@ -224,7 +226,7 @@ export class ApiService {
     },
   ): Promise<SearchResult> {
     const body: ApiPlanRunRequest = {
-      plan_id: planId,
+      id: planId,
     };
 
     if (options?.summarization !== false && options?.summarization) {
@@ -239,11 +241,21 @@ export class ApiService {
       body.include_planning = options.includePlanning;
     }
 
-    return this.post("/search/plan/run", SearchResultSchema, body);
+    try {
+      return await this.post("/search/plan/run", SearchResultSchema, body);
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        (error.code as string) === "CONVERSATION_TURN_TIMEOUT"
+      ) {
+        throw new PlanExpiredError(planId);
+      }
+      throw error;
+    }
   }
 
-  async getTools(verticalId: string): Promise<Tool[]> {
-    return this.get("/tools", ToolsResponseSchema, { vertical_id: verticalId });
+  async getTools(focus: string): Promise<Tool[]> {
+    return this.get("/tools", ToolsResponseSchema, { vertical_id: focus });
   }
 
   async executeTool(
@@ -257,40 +269,11 @@ export class ApiService {
 
     return this.post("/tools/execute", ToolExecutionResultSchema, body);
   }
-
-  async createTask(
-    query: string,
-    instruction?: string,
-  ): Promise<TaskStatusResponse> {
-    const body: ApiCreateTaskRequest = { query };
-
-    if (instruction) {
-      body.instruction = instruction;
-    }
-
-    return this.post("/tasks", TaskStatusSchema, body);
-  }
-
-  async getTaskStatus(taskId: string): Promise<TaskStatusResponse> {
-    return this.get(`/tasks/${taskId}/status`, TaskStatusSchema);
-  }
-
-  async getTaskResult(taskId: string): Promise<TaskResultResponse> {
-    return this.get(`/tasks/${taskId}/result`, TaskResultSchema);
-  }
 }
 
-function normalizeSummarization(config: SummarizationConfig): {
-  enable: boolean;
-  model: string;
-  instruction?: string;
-} {
-  if (typeof config === "string") {
-    return { enable: true, model: config };
+function normalizeSummarization(config: SummarizationConfig): ApiSummarization {
+  if (config === true) {
+    return { enable: true };
   }
-  return {
-    enable: true,
-    model: config.model,
-    instruction: config.instruction,
-  };
+  return { enable: true, instruction: config.instruction };
 }

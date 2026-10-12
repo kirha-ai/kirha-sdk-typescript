@@ -20,7 +20,7 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
   describe("search()", () => {
     it("should perform a basic search", async () => {
       const result = await kirha.search("What is the current Bitcoin price?", {
-        vertical: "crypto",
+        focus: "crypto",
       });
 
       expect(result).toBeDefined();
@@ -29,7 +29,7 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
 
     it("should return data when requested", async () => {
       const result = await kirha.search("Bitcoin price", {
-        vertical: "crypto",
+        focus: "crypto",
         includeData: true,
       });
 
@@ -39,7 +39,7 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
 
     it("should return planning info when requested", async () => {
       const result = await kirha.search("Bitcoin price", {
-        vertical: "crypto",
+        focus: "crypto",
         includePlanning: true,
       });
 
@@ -48,10 +48,10 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
       expect(result.planning?.status).toBeDefined();
     });
 
-    it("should work with custom summarization model", async () => {
+    it("should summarize when enabled", async () => {
       const result = await kirha.search("Ethereum price", {
-        vertical: "crypto",
-        summarization: "kirha-flash",
+        focus: "crypto",
+        summarization: true,
       });
 
       expect(result).toBeDefined();
@@ -60,9 +60,8 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
 
     it("should work with summarization instruction", async () => {
       const result = await kirha.search("Bitcoin price", {
-        vertical: "crypto",
+        focus: "crypto",
         summarization: {
-          model: "kirha",
           instruction: "Respond in French",
         },
       });
@@ -71,7 +70,7 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
       expect(result.summary).toBeDefined();
     });
 
-    it("should search without vertical", async () => {
+    it("should search without focus", async () => {
       const result = await kirha.search("What is the current Bitcoin price?");
 
       expect(result).toBeDefined();
@@ -79,7 +78,7 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
 
     it("should skip summarization when disabled", async () => {
       const result = await kirha.search("Bitcoin price", {
-        vertical: "crypto",
+        focus: "crypto",
         summarization: false,
         includeData: true,
       });
@@ -92,7 +91,7 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
   describe("plan()", () => {
     it("should create a plan", async () => {
       const plan = await kirha.plan("What is the current Bitcoin price?", {
-        vertical: "crypto",
+        focus: "crypto",
       });
 
       expect(plan).toBeDefined();
@@ -104,7 +103,7 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
 
     it("should execute a plan", async () => {
       const plan = await kirha.plan("Bitcoin price", {
-        vertical: "crypto",
+        focus: "crypto",
       });
 
       expect(plan.id).toBeDefined();
@@ -114,7 +113,7 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
       expect(result).toBeDefined();
     });
 
-    it("should create a plan without vertical", async () => {
+    it("should create a plan without focus", async () => {
       const plan = await kirha.plan("What is the current Bitcoin price?");
 
       expect(plan).toBeDefined();
@@ -124,7 +123,7 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
 
     it("should execute a plan with options", async () => {
       const plan = await kirha.plan("Ethereum market data", {
-        vertical: "crypto",
+        focus: "crypto",
       });
 
       const result = await plan.execute({
@@ -139,8 +138,8 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
   });
 
   describe("tools()", () => {
-    it("should list available tools for a vertical", async () => {
-      const tools = await kirha.tools({ vertical: "crypto" });
+    it("should list available tools for a focus", async () => {
+      const tools = await kirha.tools({ focus: "crypto" });
 
       expect(tools).toBeDefined();
       expect(Array.isArray(tools)).toBe(true);
@@ -154,18 +153,18 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
     });
   });
 
-  describe("default vertical", () => {
-    it("should use default vertical from config", async () => {
+  describe("default focus", () => {
+    it("should use default focus from config", async () => {
       if (!API_KEY) {
         throw new Error("KIRHA_API_KEY is not set");
       }
 
-      const kirhaWithVertical = new Kirha({
+      const kirhaWithFocus = new Kirha({
         apiKey: API_KEY,
-        vertical: "crypto",
+        focus: "crypto",
       });
 
-      const result = await kirhaWithVertical.search("Bitcoin price");
+      const result = await kirhaWithFocus.search("Bitcoin price");
 
       expect(result).toBeDefined();
     });
@@ -174,7 +173,7 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
   describe("usage and account info", () => {
     it("should return usage information", async () => {
       const result = await kirha.search("Bitcoin price", {
-        vertical: "crypto",
+        focus: "crypto",
       });
 
       expect(result.usage).toBeDefined();
@@ -186,7 +185,7 @@ describe.skipIf(!API_KEY)("Integration Tests (requires KIRHA_API_KEY)", () => {
 
     it("should return account information", async () => {
       const result = await kirha.search("Bitcoin price", {
-        vertical: "crypto",
+        focus: "crypto",
       });
 
       expect(result.account).toBeDefined();

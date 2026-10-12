@@ -1,7 +1,6 @@
 export { Kirha, KirhaApi, KirhaLocal } from "./kirha";
 export { Plan } from "./plan";
-export { Task } from "./task";
-export { TaskStatus, PlanningRuntime } from "./types";
+export { PlanningRuntime } from "./types";
 
 export type {
   KirhaApiConfig,
@@ -10,10 +9,11 @@ export type {
   Tool,
   ToolExecutionResult,
   LocalTool,
-  TaskOptions,
-  TaskStatusResponse,
-  TaskResultResponse,
-  TaskWaitOptions,
+  SummarizationConfig,
+  SearchOptions,
+  PlanOptions,
+  PlanExecuteOptions,
+  ToolsOptions,
 } from "./types";
 
 export {

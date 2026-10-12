@@ -11,19 +11,19 @@ import type {
 export interface LocalServiceConfig {
   plannerUrl: string;
   apiKey: string;
-  defaultVertical?: string;
+  defaultFocus?: string;
   defaultTools?: LocalTool[];
 }
 
 export class LocalService {
   private readonly planner: Planner;
   private readonly apiService: ApiService;
-  private readonly defaultVertical?: string;
+  private readonly defaultFocus?: string;
   private readonly defaultTools: LocalTool[];
 
   constructor(config: LocalServiceConfig) {
-    this.planner = new Planner(config.plannerUrl, {});
-    this.defaultVertical = config.defaultVertical;
+    this.planner = new Planner(config.plannerUrl, { apiKey: "unused" });
+    this.defaultFocus = config.defaultFocus;
     this.defaultTools = config.defaultTools ?? [];
     this.apiService = new ApiService({
       apiKey: config.apiKey,
@@ -59,10 +59,10 @@ export class LocalService {
   }
 
   private async buildPlannerTools(
-    vertical: string,
+    focus: string,
     requestTools?: LocalTool[],
   ): Promise<PlannerTool[]> {
-    const apiTools = await this.apiService.getTools(vertical);
+    const apiTools = await this.apiService.getTools(focus);
 
     const localTools = requestTools ?? this.defaultTools;
     const localToolNames = new Set(localTools.map((t) => t.name));
@@ -86,20 +86,16 @@ export class LocalService {
     query: string,
     options?: LocalSearchOptions,
   ): Promise<SearchResult> {
-    const vertical = options?.vertical ?? this.defaultVertical;
+    const focus = options?.focus ?? this.defaultFocus;
 
-    if (!vertical) {
-      throw new ConfigurationError(
-        "vertical is required for local planning mode",
-      );
+    if (!focus) {
+      throw new ConfigurationError("focus is required for local planning mode");
     }
 
-    const plannerTools = await this.buildPlannerTools(vertical, options?.tools);
+    const plannerTools = await this.buildPlannerTools(focus, options?.tools);
 
     if (plannerTools.length === 0) {
-      throw new ConfigurationError(
-        `No tools available for vertical "${vertical}"`,
-      );
+      throw new ConfigurationError(`No tools available for focus "${focus}"`);
     }
 
     const plan = await this.planner.generatePlan(query, {

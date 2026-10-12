@@ -1,6 +1,6 @@
 # Local Planning
 
-Use local planning via `@kirha/planner` while executing tools via the Kirha API and local tools.
+Use local planning via `@kirha/planner` while executing tools via the KIRHA API and local tools.
 
 ## Running the Model
 
@@ -28,7 +28,7 @@ import { Kirha, type LocalTool } from "kirha";
 const kirha = new Kirha({
   apiKey: "your-api-key",
   planner: "http://localhost:8080/v1",
-  vertical: "crypto",
+  focus: "crypto",
   tools: customTools,
 });
 ```
@@ -37,9 +37,9 @@ const kirha = new Kirha({
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `apiKey` | `string` | Yes | Your Kirha API key (for tool execution) |
+| `apiKey` | `string` | Yes | Your KIRHA API key (for tool execution) |
 | `planner` | `string` | Yes | Local planner URL |
-| `vertical` | `string` | No | Default vertical for all requests |
+| `focus` | `string` | No | Default vertical slug for all requests (`crypto`, `insurance`, ...) |
 | `tools` | `LocalTool[]` | No | Custom local tools |
 
 ---
@@ -61,7 +61,6 @@ Execute a search with local planning.
 
 ```typescript
 const result = await kirha.search("Bitcoin price", {
-  vertical: "crypto",
   tools: additionalTools,
 });
 ```
@@ -76,7 +75,7 @@ const result = await kirha.search("Bitcoin price", {
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `vertical` | `string` | Constructor default | Data vertical |
+| `focus` | `string` | Constructor default | Vertical slug. Required in local mode, here or in the constructor |
 | `tools` | `LocalTool[]` | Constructor default | Additional tools for this request |
 
 #### Returns: `SearchResult`
@@ -141,7 +140,7 @@ Combine local tools with API tools:
 const kirha = new Kirha({
   apiKey: "your-api-key",
   planner: "http://localhost:8080/v1",
-  vertical: "crypto",
+  focus: "crypto",
   tools: [
     {
       name: "get_crypto_price",

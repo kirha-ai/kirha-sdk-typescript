@@ -1,7 +1,6 @@
 import { ApiService } from "./api-service";
 import { LocalService } from "./local-service";
 import { Plan } from "./plan";
-import { Task } from "./task";
 import { ConfigurationError } from "./errors";
 import type {
   KirhaApiConfig,
@@ -14,12 +13,11 @@ import type {
   ToolsOptions,
   ToolExecutionResult,
   SummarizationConfig,
-  TaskOptions,
 } from "./types";
 
 export class KirhaApi {
   private readonly apiService: ApiService;
-  private readonly defaultVertical?: string;
+  private readonly defaultFocus?: string;
   private readonly defaultSummarization?: SummarizationConfig;
 
   constructor(config: KirhaApiConfig) {
@@ -30,15 +28,15 @@ export class KirhaApi {
     this.apiService = new ApiService({
       apiKey: config.apiKey,
     });
-    this.defaultVertical = config.vertical;
+    this.defaultFocus = config.focus;
     this.defaultSummarization = config.summarization;
   }
 
   async search(query: string, options?: SearchOptions): Promise<SearchResult> {
-    const vertical = options?.vertical ?? this.defaultVertical;
+    const focus = options?.focus ?? this.defaultFocus;
     const summarization = options?.summarization ?? this.defaultSummarization;
 
-    return this.apiService.search(query, vertical, {
+    return this.apiService.search(query, focus, {
       summarization,
       includeData: options?.includeData,
       includePlanning: options?.includePlanning,
@@ -47,20 +45,24 @@ export class KirhaApi {
   }
 
   async plan(query: string, options?: PlanOptions): Promise<Plan> {
-    const vertical = options?.vertical ?? this.defaultVertical;
-    const response = await this.apiService.createPlan(query, vertical);
+    const focus = options?.focus ?? this.defaultFocus;
+    const response = await this.apiService.createPlan(
+      query,
+      focus,
+      options?.planningRuntime,
+    );
 
     return new Plan(
       this.apiService,
       response,
       query,
-      vertical,
+      focus,
       options?.summarization ?? this.defaultSummarization,
     );
   }
 
   async tools(options: ToolsOptions): Promise<Tool[]> {
-    return this.apiService.getTools(options.vertical);
+    return this.apiService.getTools(options.focus);
   }
 
   async executeTool(
@@ -70,20 +72,8 @@ export class KirhaApi {
     return this.apiService.executeTool(toolName, input);
   }
 
-  async task(query: string, options?: TaskOptions): Promise<Task> {
-    const response = await this.apiService.createTask(
-      query,
-      options?.instruction,
-    );
-    return new Task(this.apiService, response.id, response.status);
-  }
-
   getPlan(id: string): Plan {
     return Plan.fromId(this.apiService, id, this.defaultSummarization);
-  }
-
-  getTask(id: string): Task {
-    return new Task(this.apiService, id);
   }
 }
 
@@ -102,7 +92,7 @@ export class KirhaLocal {
     this.localService = new LocalService({
       plannerUrl: config.planner,
       apiKey: config.apiKey,
-      defaultVertical: config.vertical,
+      defaultFocus: config.focus,
       defaultTools: config.tools,
     });
   }

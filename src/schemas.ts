@@ -1,13 +1,12 @@
 import { z } from "zod";
-import { TaskStatus } from "./types";
 
 export const ToolSchema = z
   .object({
     id: z.string(),
     name: z.string(),
     description: z.string(),
-    input_schema: z.record(z.unknown()),
-    output_schema: z.record(z.unknown()),
+    input_schema: z.record(z.string(), z.unknown()),
+    output_schema: z.record(z.string(), z.unknown()),
   })
   .transform((data) => ({
     id: data.id,
@@ -18,26 +17,6 @@ export const ToolSchema = z
   }));
 
 export const ToolsResponseSchema = z.array(ToolSchema);
-
-export const PlanStepSchema = z
-  .object({
-    tool_name: z.string(),
-    arguments: z.record(z.unknown()),
-  })
-  .transform((data) => ({
-    toolName: data.tool_name,
-    arguments: data.arguments,
-  }));
-
-export const PlanningInfoSchema = z
-  .object({
-    plan_id: z.string(),
-    steps: z.array(PlanStepSchema).optional(),
-  })
-  .transform((data) => ({
-    planId: data.plan_id,
-    steps: data.steps,
-  }));
 
 export const AccountSchema = z
   .object({
@@ -67,7 +46,7 @@ export const SearchResultSchema = z
             z.object({
               id: z.string(),
               tool_name: z.string(),
-              parameters: z.record(z.unknown()),
+              parameters: z.record(z.string(), z.unknown()),
               reasoning: z.string().optional(),
             }),
           )
@@ -76,7 +55,6 @@ export const SearchResultSchema = z
       })
       .optional(),
     usage: UsageSchema.optional(),
-    deterministicSignature: z.string().optional(),
     account: AccountSchema.optional(),
   })
   .transform((data) => ({
@@ -96,7 +74,6 @@ export const SearchResultSchema = z
         }
       : undefined,
     usage: data.usage,
-    deterministicSignature: data.deterministicSignature,
     account: data.account,
   }));
 
@@ -104,7 +81,7 @@ export const PlanStepResponseSchema = z
   .object({
     id: z.string(),
     tool_name: z.string(),
-    parameters: z.record(z.unknown()),
+    parameters: z.record(z.string(), z.unknown()),
     reasoning: z.string().optional(),
   })
   .transform((data) => ({
@@ -174,14 +151,3 @@ export const ApiErrorResponseSchema = z.union([
     details: undefined,
   })),
 ]);
-
-// Task schemas
-export const TaskStatusSchema = z.object({
-  id: z.string(),
-  status: z.nativeEnum(TaskStatus),
-});
-
-export const TaskResultSchema = TaskStatusSchema.extend({
-  result: z.string().nullable(),
-  error: z.string().nullable(),
-});

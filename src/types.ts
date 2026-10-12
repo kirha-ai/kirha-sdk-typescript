@@ -1,15 +1,8 @@
-export type SummarizationModel = "kirha" | "kirha-flash";
-
-export type SummarizationConfig =
-  | SummarizationModel
-  | {
-      model: SummarizationModel;
-      instruction?: string;
-    };
+export type SummarizationConfig = true | { instruction?: string };
 
 interface KirhaBaseConfig {
   apiKey: string;
-  vertical?: string;
+  focus?: string;
 }
 
 export interface KirhaApiConfig extends KirhaBaseConfig {
@@ -57,11 +50,10 @@ export interface ToolExecutionResult {
 export enum PlanningRuntime {
   Standard = "standard",
   Fast = "fast",
-  Deterministic = "deterministic",
 }
 
 export interface SearchOptions {
-  vertical?: string;
+  focus?: string;
   summarization?: SummarizationConfig | false;
   includeData?: boolean;
   includePlanning?: boolean;
@@ -69,7 +61,7 @@ export interface SearchOptions {
 }
 
 export interface LocalSearchOptions {
-  vertical?: string;
+  focus?: string;
   tools?: LocalTool[];
 }
 
@@ -92,13 +84,13 @@ export interface SearchResult {
   data?: unknown;
   planning?: PlanningInfo;
   usage?: PlanUsage;
-  deterministicSignature?: string;
   account?: PlanAccount;
 }
 
 export interface PlanOptions {
-  vertical?: string;
+  focus?: string;
   summarization?: SummarizationConfig;
+  planningRuntime?: PlanningRuntime;
 }
 
 export interface PlanExecuteOptions {
@@ -134,17 +126,18 @@ export interface PlanResponse {
 }
 
 export interface ToolsOptions {
-  vertical: string;
+  focus: string;
+}
+
+export interface ApiSummarization {
+  enable: boolean;
+  instruction?: string;
 }
 
 export interface ApiSearchRequest {
   query: string;
-  vertical_id?: string;
-  summarization?: {
-    enable: boolean;
-    model: string;
-    instruction?: string;
-  };
+  focus?: string;
+  summarization?: ApiSummarization;
   include_raw_data?: boolean;
   include_planning?: boolean;
   planning_runtime?: PlanningRuntime;
@@ -152,16 +145,13 @@ export interface ApiSearchRequest {
 
 export interface ApiPlanRequest {
   query: string;
-  vertical_id?: string;
+  focus?: string;
+  planning_runtime?: PlanningRuntime;
 }
 
 export interface ApiPlanRunRequest {
-  plan_id: string;
-  summarization?: {
-    enable: boolean;
-    model: string;
-    instruction?: string;
-  };
+  id: string;
+  summarization?: ApiSummarization;
   include_raw_data?: boolean;
   include_planning?: boolean;
 }
@@ -177,39 +167,4 @@ export interface ApiErrorResponse {
     message: string;
     details?: unknown;
   };
-}
-
-export enum TaskStatus {
-  Queued = "Queued",
-  Researching = "Researching",
-  Validating = "Validating",
-  Summarizing = "Summarizing",
-  Completed = "Completed",
-  Failed = "Failed",
-}
-
-export interface TaskOptions {
-  instruction?: string;
-}
-
-export interface TaskStatusResponse {
-  id: string;
-  status: TaskStatus;
-}
-
-export interface TaskResultResponse {
-  id: string;
-  status: TaskStatus;
-  result: string | null;
-  error: string | null;
-}
-
-export interface TaskWaitOptions {
-  pollInterval?: number;
-  timeout?: number;
-}
-
-export interface ApiCreateTaskRequest {
-  query: string;
-  instruction?: string;
 }
