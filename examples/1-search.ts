@@ -10,8 +10,6 @@ if (!process.env.KIRHA_API_KEY) {
 
 const kirha = new Kirha({ apiKey: process.env.KIRHA_API_KEY });
 
-const result = await kirha.search("What is the profit and loss of the largest USDC holder on Base?", {
-  focus: "crypto",
-});
+const result = await kirha.search("How to stream AI responses in Next.js using the latest AI SDK?");
 
 console.log(result.data);

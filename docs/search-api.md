@@ -36,7 +36,7 @@ type SummarizationConfig = true | { instruction?: string };
 Execute a search query with optional summarization.
 
 ```typescript
-const result = await kirha.search("Bitcoin price", {
+const result = await kirha.search("List top 10 stablecoins yield on Ethereum", {
   focus: "crypto",
   summarization: { instruction: "Be concise" },
   includeData: true,
@@ -80,7 +80,7 @@ console.log(result.usage?.consumed);
 Generate an execution plan without executing it. Plans are valid for 5 minutes.
 
 ```typescript
-const plan = await kirha.plan("Compare BTC and ETH", {
+const plan = await kirha.plan("Summarize latest NVIDIA earning calls", {
   summarization: true,
   planningRuntime: PlanningRuntime.Fast,
 });

@@ -10,6 +10,10 @@ export type {
   ToolExecutionResult,
   LocalTool,
   SummarizationConfig,
+  SearchOptions,
+  PlanOptions,
+  PlanExecuteOptions,
+  ToolsOptions,
 } from "./types";
 
 export {

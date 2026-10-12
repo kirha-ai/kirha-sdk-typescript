@@ -35,12 +35,9 @@ bun add kirha
 ```typescript
 import { Kirha } from "kirha";
 
-const kirha = new Kirha({
-  apiKey: process.env.KIRHA_API_KEY,
-  focus: "crypto",
-});
+const kirha = new Kirha({ apiKey: process.env.KIRHA_API_KEY });
 
-const result = await kirha.search("What is the profit and loss of the largest USDC holder on Base?");
+const result = await kirha.search("What does the boxed warning on Ozempic say?");
 
 console.log(result.data);
 ```
@@ -52,7 +49,7 @@ console.log(result.data);
 ```typescript
 const kirha = new Kirha({ apiKey: "your-api-key" });
 
-const result = await kirha.search("What is the profit and loss of the largest USDC holder on Base?", {
+const result = await kirha.search("Summarize latest NVIDIA earning calls", {
   summarization: true,
 });
 
@@ -64,9 +61,9 @@ console.log(result.summary);
 ```typescript
 const kirha = new Kirha({ apiKey: "your-api-key" });
 
-const result = await kirha.search("What is the profit and loss of the largest USDC holder on Base?", {
+const result = await kirha.search("List top 10 stablecoins yield on Ethereum", {
   summarization: {
-    instruction: "Format the response as a table with columns: Address, PnL, Percentage",
+    instruction: "Format the response as a table with columns: Stablecoin, Protocol, APY",
   },
 });
 
@@ -78,8 +75,9 @@ console.log(result.summary);
 ```typescript
 const kirha = new Kirha({ apiKey: "your-api-key" });
 
-const plan = await kirha.plan("Compare trading volumes on Ethereum vs Base network", {
-});
+const plan = await kirha.plan(
+  "Find engineers working at companies behind the latest patents in Machine Learning",
+);
 
 // Review plan (Human in the loop or agent validation)
 console.log(plan.steps);

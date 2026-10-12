@@ -10,7 +10,7 @@ if (!process.env.KIRHA_API_KEY) {
 
 const kirha = new Kirha({ apiKey: process.env.KIRHA_API_KEY });
 
-const result = await kirha.search("What is the profit and loss of the largest USDC holder on Base?", {
+const result = await kirha.search("List top 10 stablecoins yield on Ethereum", {
   summarization: {
     instruction: "Format the response as a table",
   },
