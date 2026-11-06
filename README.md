@@ -99,6 +99,29 @@ const result = await kirha.executeTool("zerion_getEthereumWalletProfitAndLoss", 
 });
 ```
 
+Filter the catalogue by provider, page through it, or read how many tools match:
+
+```typescript
+const page = await kirha.listTools({ provider: "zerion", page: 1, limit: 20 });
+console.log(page.total, page.tools.length);
+```
+
+Rank the tools that can carry out an intent, most relevant first:
+
+```typescript
+const match = await kirha.matchTools("profit and loss of a wallet", { limit: 5 });
+console.log(match.tools.map(t => [t.name, t.creditsPerCall]));
+```
+
+Tools that relation expansion surfaced come last, with `related: true` and `relatedTo` naming the matches that brought them in.
+
+Read one tool, with the other tools its provider serves:
+
+```typescript
+const tool = await kirha.getTool("zerion_getEthereumWalletProfitAndLoss");
+console.log(tool.inputSchema, tool.relatedTools);
+```
+
 ### Local planning with KIRHA tools
 
 ```typescript

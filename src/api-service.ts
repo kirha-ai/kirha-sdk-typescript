@@ -10,11 +10,15 @@ import {
   SearchResultSchema,
   PlanResponseSchema,
   ToolsResponseSchema,
+  ToolDetailsSchema,
   ToolExecutionResultSchema,
   ApiErrorResponseSchema,
 } from "./schemas";
 import type {
-  Tool,
+  ToolsPage,
+  ToolsOptions,
+  ToolMatchOptions,
+  ToolDetails,
   ToolExecutionResult,
   SearchResult,
   PlanResponse,
@@ -254,11 +258,31 @@ export class ApiService {
     }
   }
 
-  async getTools(focus: string): Promise<Tool[]> {
-    const response = await this.get("/tools", ToolsResponseSchema, {
-      vertical_id: focus,
+  async getTools(options?: ToolsOptions): Promise<ToolsPage> {
+    return this.get("/tools", ToolsResponseSchema, {
+      ...(options?.focus && { vertical_id: options.focus }),
+      ...(options?.provider && { provider: options.provider }),
+      ...(options?.page !== undefined && { page: String(options.page) }),
+      ...(options?.limit !== undefined && { limit: String(options.limit) }),
     });
-    return response.tools;
+  }
+
+  async matchTools(
+    query: string,
+    options?: ToolMatchOptions,
+  ): Promise<ToolsPage> {
+    return this.get("/tools/match", ToolsResponseSchema, {
+      q: query,
+      ...(options?.focus && { focus: options.focus }),
+      ...(options?.limit !== undefined && { limit: String(options.limit) }),
+    });
+  }
+
+  async getTool(toolName: string): Promise<ToolDetails> {
+    return this.get(
+      `/tools/${encodeURIComponent(toolName)}`,
+      ToolDetailsSchema,
+    );
   }
 
   async executeTool(

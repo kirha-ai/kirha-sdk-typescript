@@ -231,30 +231,26 @@ describe("ApiService", () => {
   });
 
   describe("getTools", () => {
-    it("should call GET /tools with vertical_id query param", async () => {
-      const mockResponse = {
-        tools: [
-          {
-            id: "tool-1",
-            name: "get_price",
-            description: "Get price",
-            input_schema: {},
-            output_schema: {},
-          },
-        ],
-        total: 1,
-        limit: 1,
-        skip: 0,
-      };
+    const mockTool = {
+      id: "tool-1",
+      name: "coingecko_get_price",
+      provider: "coingecko",
+      description: "Get price",
+      credits_per_call: 3,
+      input_schema: { type: "object" },
+      output_schema: { type: "object" },
+    };
 
+    it("should call GET /tools with vertical_id query param", async () => {
       mockFetch({
         ok: true,
         status: 200,
-        json: () => Promise.resolve(mockResponse),
+        json: () =>
+          Promise.resolve({ tools: [mockTool], total: 1, limit: 1, skip: 0 }),
       });
 
       const service = new ApiService({ apiKey: "test-key" });
-      const result = await service.getTools("crypto");
+      const result = await service.getTools({ focus: "crypto" });
 
       const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
 
@@ -262,25 +258,19 @@ describe("ApiService", () => {
         "https://api.kirha.com/chat/v1/tools?vertical_id=crypto",
       );
       expect(options.method).toBe("GET");
-      expect(result[0]?.name).toBe("get_price");
-      expect(result[0]?.inputSchema).toEqual({});
+      expect(result.tools[0]?.name).toBe("coingecko_get_price");
+      expect(result.tools[0]?.provider).toBe("coingecko");
+      expect(result.tools[0]?.creditsPerCall).toBe(3);
+      expect(result.tools[0]?.inputSchema).toEqual({ type: "object" });
     });
 
-    it("should return only the tools of a paginated response", async () => {
+    it("should return the pagination window", async () => {
       mockFetch({
         ok: true,
         status: 200,
         json: () =>
           Promise.resolve({
-            tools: [
-              {
-                id: "tool-1",
-                name: "get_price",
-                description: "Get price",
-                input_schema: {},
-                output_schema: {},
-              },
-            ],
+            tools: [mockTool],
             total: 416,
             limit: 20,
             skip: 40,
@@ -288,10 +278,210 @@ describe("ApiService", () => {
       });
 
       const service = new ApiService({ apiKey: "test-key" });
-      const result = await service.getTools("crypto");
+      const result = await service.getTools({ focus: "crypto" });
 
-      expect(result).toHaveLength(1);
-      expect(result[0]?.name).toBe("get_price");
+      expect(result.total).toBe(416);
+      expect(result.limit).toBe(20);
+      expect(result.skip).toBe(40);
+      expect(result.tools).toHaveLength(1);
+    });
+
+    it("should send the provider and paging filters", async () => {
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({ tools: [], total: 0, limit: 20, skip: 20 }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      await service.getTools({ provider: "coingecko", page: 2, limit: 20 });
+
+      const [url] = mockFn.mock.calls[0] as [string, RequestInit];
+      const params = new URL(url).searchParams;
+
+      expect(params.get("provider")).toBe("coingecko");
+      expect(params.get("page")).toBe("2");
+      expect(params.get("limit")).toBe("20");
+      expect(params.has("vertical_id")).toBe(false);
+    });
+
+    it("should send no query param without options", async () => {
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ tools: [], total: 0, limit: 0, skip: 0 }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      await service.getTools();
+
+      const [url] = mockFn.mock.calls[0] as [string, RequestInit];
+
+      expect(url).toBe("https://api.kirha.com/chat/v1/tools");
+    });
+
+    it("should accept a tool without input and output schemas", async () => {
+      const { input_schema, output_schema, ...bareTool } = mockTool;
+
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({ tools: [bareTool], total: 1, limit: 1, skip: 0 }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      const result = await service.getTools();
+
+      expect(result.tools[0]?.inputSchema).toBeUndefined();
+      expect(result.tools[0]?.outputSchema).toBeUndefined();
+    });
+  });
+
+  describe("matchTools", () => {
+    const rankedTool = {
+      id: "tool-1",
+      name: "xverse_getTokenHolders",
+      provider: "xverse",
+      description: "Token holders",
+      credits_per_call: 3,
+    };
+
+    it("should call GET /tools/match with q, focus and limit", async () => {
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            tools: [rankedTool],
+            total: 1,
+            limit: 5,
+            skip: 0,
+          }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      const result = await service.matchTools("who holds this token", {
+        focus: "crypto",
+        limit: 5,
+      });
+
+      const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
+      const target = new URL(url);
+
+      expect(target.pathname).toBe("/chat/v1/tools/match");
+      expect(target.searchParams.get("q")).toBe("who holds this token");
+      expect(target.searchParams.get("focus")).toBe("crypto");
+      expect(target.searchParams.get("limit")).toBe("5");
+      expect(options.method).toBe("GET");
+      expect(result.limit).toBe(5);
+      expect(result.tools[0]?.related).toBe(false);
+      expect(result.tools[0]?.relatedTo).toEqual([]);
+    });
+
+    it("should read related and related_to on expanded tools", async () => {
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            tools: [
+              rankedTool,
+              {
+                ...rankedTool,
+                id: "tool-2",
+                name: "xverse_getSparkTokenHolders",
+                related: true,
+                related_to: ["xverse_getTokenHolders"],
+              },
+            ],
+            total: 2,
+            limit: 10,
+            skip: 0,
+          }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      const result = await service.matchTools("who holds this token");
+
+      expect(result.tools[0]?.related).toBe(false);
+      expect(result.tools[1]?.related).toBe(true);
+      expect(result.tools[1]?.relatedTo).toEqual(["xverse_getTokenHolders"]);
+    });
+
+    it("should accept an empty ranking", async () => {
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({ tools: [], total: 0, limit: 10, skip: 0 }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      const result = await service.matchTools("nothing matches this");
+
+      expect(result.tools).toEqual([]);
+      expect(result.total).toBe(0);
+    });
+  });
+
+  describe("getTool", () => {
+    it("should call GET /tools/{tool_name} and read related_tools", async () => {
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            id: "tool-1",
+            name: "pubmed_searchPubmedArticles",
+            provider: "pubmed",
+            description: "Search articles",
+            credits_per_call: 0,
+            input_schema: { type: "object" },
+            output_schema: { type: "object" },
+            related_tools: [
+              "pubmed_fetchPubmedArticles",
+              "pubmed_lookupMeshTerms",
+            ],
+          }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      const result = await service.getTool("pubmed_searchPubmedArticles");
+
+      const [url, options] = mockFn.mock.calls[0] as [string, RequestInit];
+
+      expect(url).toBe(
+        "https://api.kirha.com/chat/v1/tools/pubmed_searchPubmedArticles",
+      );
+      expect(options.method).toBe("GET");
+      expect(result.name).toBe("pubmed_searchPubmedArticles");
+      expect(result.creditsPerCall).toBe(0);
+      expect(result.relatedTools).toEqual([
+        "pubmed_fetchPubmedArticles",
+        "pubmed_lookupMeshTerms",
+      ]);
+    });
+
+    it("should default related_tools to an empty array", async () => {
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            id: "tool-1",
+            name: "pubmed_searchPubmedArticles",
+            provider: "pubmed",
+            description: "Search articles",
+            credits_per_call: 0,
+          }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      const result = await service.getTool("pubmed_searchPubmedArticles");
+
+      expect(result.relatedTools).toEqual([]);
     });
   });
 

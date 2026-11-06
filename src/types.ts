@@ -32,8 +32,23 @@ export interface Tool {
   id: string;
   name: string;
   description: string;
-  inputSchema: Record<string, unknown>;
-  outputSchema: Record<string, unknown>;
+  provider: string;
+  creditsPerCall: number;
+  inputSchema?: Record<string, unknown>;
+  outputSchema?: Record<string, unknown>;
+  related: boolean;
+  relatedTo: string[];
+}
+
+export interface ToolDetails extends Tool {
+  relatedTools: string[];
+}
+
+export interface ToolsPage {
+  tools: Tool[];
+  total: number;
+  limit: number;
+  skip: number;
 }
 
 export interface ToolExecutionResult {
@@ -126,7 +141,15 @@ export interface PlanResponse {
 }
 
 export interface ToolsOptions {
-  focus: string;
+  focus?: string;
+  provider?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface ToolMatchOptions {
+  focus?: string;
+  limit?: number;
 }
 
 export interface ApiSummarization {
