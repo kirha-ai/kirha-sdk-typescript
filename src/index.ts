@@ -7,6 +7,8 @@ export type {
   KirhaLocalConfig,
   SearchResult,
   Tool,
+  ToolDetails,
+  ToolsPage,
   ToolExecutionResult,
   LocalTool,
   SummarizationConfig,
@@ -14,6 +16,7 @@ export type {
   PlanOptions,
   PlanExecuteOptions,
   ToolsOptions,
+  ToolMatchOptions,
 } from "./types";
 
 export {
@@ -30,6 +33,7 @@ export {
 
 export {
   ToolSchema,
+  ToolDetailsSchema,
   ToolsResponseSchema,
   SearchResultSchema,
   PlanResponseSchema,

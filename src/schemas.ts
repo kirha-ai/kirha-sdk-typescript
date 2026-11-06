@@ -1,22 +1,46 @@
 import { z } from "zod";
 
-export const ToolSchema = z
-  .object({
-    id: z.string(),
-    name: z.string(),
-    description: z.string(),
-    input_schema: z.record(z.string(), z.unknown()),
-    output_schema: z.record(z.string(), z.unknown()),
-  })
-  .transform((data) => ({
+const ToolFieldsSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  provider: z.string(),
+  credits_per_call: z.number().int(),
+  input_schema: z.record(z.string(), z.unknown()).optional(),
+  output_schema: z.record(z.string(), z.unknown()).optional(),
+  related: z.boolean().optional(),
+  related_to: z.array(z.string()).optional(),
+});
+
+function toTool(data: z.infer<typeof ToolFieldsSchema>) {
+  return {
     id: data.id,
     name: data.name,
     description: data.description,
+    provider: data.provider,
+    creditsPerCall: data.credits_per_call,
     inputSchema: data.input_schema,
     outputSchema: data.output_schema,
-  }));
+    related: data.related ?? false,
+    relatedTo: data.related_to ?? [],
+  };
+}
 
-export const ToolsResponseSchema = z.array(ToolSchema);
+export const ToolSchema = ToolFieldsSchema.transform(toTool);
+
+export const ToolDetailsSchema = ToolFieldsSchema.extend({
+  related_tools: z.array(z.string()).optional(),
+}).transform((data) => ({
+  ...toTool(data),
+  relatedTools: data.related_tools ?? [],
+}));
+
+export const ToolsResponseSchema = z.object({
+  tools: z.array(ToolSchema),
+  total: z.number(),
+  limit: z.number(),
+  skip: z.number(),
+});
 
 export const AccountSchema = z
   .object({

@@ -34,8 +34,8 @@ export class LocalService {
     return {
       name: tool.name,
       description: tool.description,
-      inputSchema: JSON.stringify(tool.inputSchema),
-      outputSchema: JSON.stringify(tool.outputSchema),
+      inputSchema: JSON.stringify(tool.inputSchema ?? {}),
+      outputSchema: JSON.stringify(tool.outputSchema ?? {}),
       handler: async (input: unknown) => {
         const result = await this.apiService.executeTool(tool.name, input);
         if (result.isError) {
@@ -62,7 +62,7 @@ export class LocalService {
     focus: string,
     requestTools?: LocalTool[],
   ): Promise<PlannerTool[]> {
-    const apiTools = await this.apiService.getTools(focus);
+    const { tools: apiTools } = await this.apiService.getTools({ focus });
 
     const localTools = requestTools ?? this.defaultTools;
     const localToolNames = new Set(localTools.map((t) => t.name));

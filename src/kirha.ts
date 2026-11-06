@@ -11,6 +11,9 @@ import type {
   SearchResult,
   Tool,
   ToolsOptions,
+  ToolsPage,
+  ToolMatchOptions,
+  ToolDetails,
   ToolExecutionResult,
   SummarizationConfig,
 } from "./types";
@@ -61,8 +64,30 @@ export class KirhaApi {
     );
   }
 
-  async tools(options: ToolsOptions): Promise<Tool[]> {
-    return this.apiService.getTools(options.focus);
+  async tools(options?: ToolsOptions): Promise<Tool[]> {
+    const page = await this.listTools(options);
+    return page.tools;
+  }
+
+  async listTools(options?: ToolsOptions): Promise<ToolsPage> {
+    return this.apiService.getTools({
+      ...options,
+      focus: options?.focus ?? this.defaultFocus,
+    });
+  }
+
+  async matchTools(
+    query: string,
+    options?: ToolMatchOptions,
+  ): Promise<ToolsPage> {
+    return this.apiService.matchTools(query, {
+      ...options,
+      focus: options?.focus ?? this.defaultFocus,
+    });
+  }
+
+  async getTool(toolName: string): Promise<ToolDetails> {
+    return this.apiService.getTool(toolName);
   }
 
   async executeTool(
