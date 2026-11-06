@@ -255,7 +255,10 @@ export class ApiService {
   }
 
   async getTools(focus: string): Promise<Tool[]> {
-    return this.get("/tools", ToolsResponseSchema, { vertical_id: focus });
+    const response = await this.get("/tools", ToolsResponseSchema, {
+      vertical_id: focus,
+    });
+    return response.tools;
   }
 
   async executeTool(

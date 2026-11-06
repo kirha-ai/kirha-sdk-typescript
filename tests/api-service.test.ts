@@ -232,20 +232,25 @@ describe("ApiService", () => {
 
   describe("getTools", () => {
     it("should call GET /tools with vertical_id query param", async () => {
-      const mockTools = [
-        {
-          id: "tool-1",
-          name: "get_price",
-          description: "Get price",
-          input_schema: {},
-          output_schema: {},
-        },
-      ];
+      const mockResponse = {
+        tools: [
+          {
+            id: "tool-1",
+            name: "get_price",
+            description: "Get price",
+            input_schema: {},
+            output_schema: {},
+          },
+        ],
+        total: 1,
+        limit: 1,
+        skip: 0,
+      };
 
       mockFetch({
         ok: true,
         status: 200,
-        json: () => Promise.resolve(mockTools),
+        json: () => Promise.resolve(mockResponse),
       });
 
       const service = new ApiService({ apiKey: "test-key" });
@@ -259,6 +264,34 @@ describe("ApiService", () => {
       expect(options.method).toBe("GET");
       expect(result[0]?.name).toBe("get_price");
       expect(result[0]?.inputSchema).toEqual({});
+    });
+
+    it("should return only the tools of a paginated response", async () => {
+      mockFetch({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            tools: [
+              {
+                id: "tool-1",
+                name: "get_price",
+                description: "Get price",
+                input_schema: {},
+                output_schema: {},
+              },
+            ],
+            total: 416,
+            limit: 20,
+            skip: 40,
+          }),
+      });
+
+      const service = new ApiService({ apiKey: "test-key" });
+      const result = await service.getTools("crypto");
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.name).toBe("get_price");
     });
   });
 

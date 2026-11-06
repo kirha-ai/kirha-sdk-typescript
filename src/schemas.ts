@@ -16,7 +16,12 @@ export const ToolSchema = z
     outputSchema: data.output_schema,
   }));
 
-export const ToolsResponseSchema = z.array(ToolSchema);
+export const ToolsResponseSchema = z.object({
+  tools: z.array(ToolSchema),
+  total: z.number(),
+  limit: z.number(),
+  skip: z.number(),
+});
 
 export const AccountSchema = z
   .object({
